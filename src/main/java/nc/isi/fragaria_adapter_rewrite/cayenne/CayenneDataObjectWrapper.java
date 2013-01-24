@@ -5,11 +5,16 @@ import nc.isi.fragaria_adapter_rewrite.entities.AbstractEntity;
 import org.apache.cayenne.CayenneDataObject;
 import org.apache.cayenne.DataObject;
 import org.apache.cayenne.ObjectId;
-
-public class FragariaCayenneDataObject extends CayenneDataObject implements DataObject{
+/**
+ * 
+ * @author bjonathas
+ * Wrapper permettant de passer les "entities" au context de sorte à pouvoir utiliser
+ * les fonctionnalités Cayenne. 
+ */
+public class CayenneDataObjectWrapper extends CayenneDataObject implements DataObject{
 	private final AbstractEntity entity;
 	
-	public FragariaCayenneDataObject(AbstractEntity entity) {
+	public CayenneDataObjectWrapper(AbstractEntity entity) {
 		super();
 		this.entity = entity;
 		this.objectId = new ObjectId(entity.getClass().getSimpleName(), "id", entity.getId());

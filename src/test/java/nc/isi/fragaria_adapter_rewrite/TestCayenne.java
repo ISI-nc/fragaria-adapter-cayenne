@@ -1,7 +1,7 @@
 package nc.isi.fragaria_adapter_rewrite;
 
 import junit.framework.TestCase;
-import nc.isi.fragaria_adapter_rewrite.cayenne.FragariaCayenneDataObject;
+import nc.isi.fragaria_adapter_rewrite.cayenne.CayenneDataObjectWrapper;
 import nc.isi.fragaria_adapter_rewrite.entities.EntityBuilder;
 import nc.isi.fragaria_adapter_rewrite.model.Etablissement;
 import nc.isi.fragaria_adapter_rewrite.services.FragariaDomainModule;
@@ -27,7 +27,7 @@ public class TestCayenne extends TestCase{
 	public void testFragariaCayenneDataObject(){
 		Etablissement etablissement = entityBuilder.build(Etablissement.class);
 		etablissement.setName("ATIR");
-		FragariaCayenneDataObject cayenneEtablissement = new FragariaCayenneDataObject(etablissement);
+		CayenneDataObjectWrapper cayenneEtablissement = new CayenneDataObjectWrapper(etablissement);
 		context.registerNewObject(cayenneEtablissement);
 		context.commitChanges();
 	}
