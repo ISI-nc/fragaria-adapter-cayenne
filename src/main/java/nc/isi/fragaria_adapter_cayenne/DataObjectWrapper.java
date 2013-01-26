@@ -28,6 +28,8 @@ public class DataObjectWrapper extends CayenneDataObject implements DataObject{
 			throw new RuntimeException("Impossible d'updater l'objet (id : "+entity.getId()+" ne correspond pas à l'id : "+modifiedEntity.getId());
 	}
 
+	//TODO prendre exemple sur class cayenne etab,medecin patient dans v0 pour regarder quelles methodes sont utilisées et les implémenter
+	
 	@Override
 	public Object readProperty(String propName) {
 		return entity.getMetadata().read(entity, propName);
