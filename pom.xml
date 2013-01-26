@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nc.isi</groupId>
-	<artifactId>fragaria-adapter-rewrite</artifactId>
+	<artifactId>fragaria-adapter-cayenne</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>fragaria-adapter-rewrite Tapestry 5 Application</name>
@@ -11,6 +11,17 @@
 		<!-- Too set up an application with a database, change the artifactId below 
 			to tapestry-hibernate, and add a dependency on your JDBC driver. You'll also 
 			need to add Hibernate configuration files, such as hibernate.cfg.xml. -->
+		<dependency>
+			<groupId>nc.isi</groupId>
+			<artifactId>fragaria-adapter-rewrite</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>nc.isi</groupId>
+			<artifactId>fragaria-dsloader-yaml</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.tapestry</groupId>
 			<artifactId>tapestry-ioc</artifactId>
