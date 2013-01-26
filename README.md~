@@ -1,4 +1,4 @@
 fragaria-adapter-cayenne
 ========================
 
-CouchDb implémentation for fragaria
+Cayenne implémentation for fragaria adapter
