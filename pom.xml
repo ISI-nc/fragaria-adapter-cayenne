@@ -22,6 +22,11 @@
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.cayenne.plugins</groupId>
+			<artifactId>maven-cayenne-plugin</artifactId>
+			<version>3.1M3</version>
+		</dependency> 
 	</dependencies>
 	<build>
 		<finalName>fragaria-adapter-cayenne</finalName>
