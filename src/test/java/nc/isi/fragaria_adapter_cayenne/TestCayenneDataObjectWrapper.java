@@ -1,5 +1,6 @@
 package nc.isi.fragaria_adapter_cayenne;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -35,7 +36,7 @@ public class TestCayenneDataObjectWrapper extends TestCase{
 	public void testInsertSimplePropIntoDb(){
 		Etablissement etablissement = entityBuilder.build(Etablissement.class);
 		etablissement.setName("ATIR");
-		DataObjectWrapper cayenneEtablissement = new DataObjectWrapper(etablissement);
+		MyCayenneDataObject cayenneEtablissement = new MyCayenneDataObject(etablissement);
 		context.registerNewObject(cayenneEtablissement);
 		context.commitChanges();
 	}
@@ -43,16 +44,18 @@ public class TestCayenneDataObjectWrapper extends TestCase{
 	public void testInsertToOneRelIntoDbWhenRelIsFromCayenne(){
 		Session session = buildSession();
 		Etablissement etablissement = session.create(Etablissement.class);
-		etablissement.setName("ATIR");
-		DataObjectWrapper cayenneEtablissement = new DataObjectWrapper(etablissement);
+		etablissement.setName("ATIR2");
+		MyCayenneDataObject cayenneEtablissement = new MyCayenneDataObject(etablissement);
 		context.registerNewObject(cayenneEtablissement);
 		Directeur directeur = session.create(Directeur.class);
 		directeur.setName("David");
-		DataObjectWrapper cayenneDirecteur = new DataObjectWrapper(directeur);
+		MyCayenneDataObject cayenneDirecteur = new MyCayenneDataObject(directeur);
 		context.registerNewObject(cayenneDirecteur);
-		
-//		etablissement.setDirecteur(directeur);
-//		cayenneEtablissement.update(etablissement);
+
+		etablissement.setDirecteur(directeur);
+		cayenneEtablissement.setToOneTarget("directeur", cayenneDirecteur, false);
+
+		cayenneEtablissement.update(etablissement);
 		
 		context.commitChanges();
 	}
@@ -82,7 +85,7 @@ public class TestCayenneDataObjectWrapper extends TestCase{
 			public <T extends Entity> CollectionQueryResponse<T> executeQuery(
 					Query<T> query) {
 
-				return  null;
+				return  new CollectionQueryResponse<>(new  ArrayList<T>());
 			}
 		}, entityBuilder);
 

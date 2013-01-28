@@ -33,9 +33,10 @@ public class Directeur extends AbstractEntity{
 		writeProperty(NAME, name);
 	}
 	
+	
+	
 	@BackReference("directeur")
 	public Collection<Etablissement> getEtablissements() {
-		System.out.println(readCollection(Etablissement.class, ETABLISSEMENTS));
 		return readCollection(Etablissement.class, ETABLISSEMENTS);
 	}
 
