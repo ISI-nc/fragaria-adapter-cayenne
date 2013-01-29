@@ -12,19 +12,19 @@ import org.apache.cayenne.ObjectId;
 /**
  * 
  * @author bjonathas
- * Wrapper permettant de passer les "entities" au context de sorte à pouvoir utiliser
+ * Superclass des ObjEntity crées à partir du CayenneModeler permettant de wrapper une Entity afin de pouvoir utiliser
  * les fonctionnalités Cayenne. 
  */
-public class MyCayenneDataObject extends CayenneDataObject implements DataObject{
+public class EntityCayenneDataObject extends CayenneDataObject implements DataObject{
 	private Entity entity;
 	private final Source source;
 	
-	public MyCayenneDataObject() {
+	public EntityCayenneDataObject() {
 		super();
 		this.source = Source.DB;
 	}
 	
-	public MyCayenneDataObject(Entity entity) {
+	public EntityCayenneDataObject(Entity entity) {
 		super();
 		checkNotNull(entity);
 		this.entity = entity;

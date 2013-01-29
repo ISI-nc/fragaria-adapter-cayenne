@@ -41,11 +41,6 @@ public class CayenneAdapter extends AbstractAdapter{
 
 			});
 	
-	
-	
-	
-	
-	
 	public CayenneAdapter(DataSourceProvider dataSourceProvider) {
 		this.dataSourceProvider = dataSourceProvider;
 	}
@@ -81,14 +76,14 @@ public class CayenneAdapter extends AbstractAdapter{
 	
 	private void register(ObjectContext context, Entity entity) {
 		if(entity.getState()==State.NEW)
-			context.registerNewObject(new MyCayenneDataObject(entity));
+			context.registerNewObject(new EntityCayenneDataObject(entity));
 		else if (entity.getState()==State.MODIFIED){
 			ObjectIdQuery query = new ObjectIdQuery(getObjectId(entity));
-			MyCayenneDataObject cayenneDO = (MyCayenneDataObject) context.performQuery(query);
+			EntityCayenneDataObject cayenneDO = (EntityCayenneDataObject) context.performQuery(query);
 			cayenneDO.updateFrom(entity);
 		}else if(entity.getState()==State.DELETED){
 			ObjectIdQuery query = new ObjectIdQuery(getObjectId(entity));
-			MyCayenneDataObject cayenneDO = (MyCayenneDataObject) context.performQuery(query);
+			EntityCayenneDataObject cayenneDO = (EntityCayenneDataObject) context.performQuery(query);
 			context.deleteObjects(cayenneDO);
 		}
 	}

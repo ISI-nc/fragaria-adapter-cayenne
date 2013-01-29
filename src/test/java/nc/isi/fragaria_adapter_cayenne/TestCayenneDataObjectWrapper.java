@@ -42,7 +42,7 @@ public class TestCayenneDataObjectWrapper extends TestCase{
 		ObjectContext context = cayenneRuntime.getContext();
 		Etablissement etablissement = session.create(Etablissement.class);
 		etablissement.setName("ATIRSimple");
-		MyCayenneDataObject cayenneEtablissement = new MyCayenneDataObject(etablissement);
+		EntityCayenneDataObject cayenneEtablissement = new EntityCayenneDataObject(etablissement);
 		context.registerNewObject(cayenneEtablissement);
 		context.commitChanges();
 	}
@@ -54,14 +54,14 @@ public class TestCayenneDataObjectWrapper extends TestCase{
 		Etablissement etablissement = session.create(Etablissement.class);
 		etablissement.setName("ATIR2");
 
-		MyCayenneDataObject cayenneEtablissement = new MyCayenneDataObject(etablissement);
-		MyCayenneDataObject cayenneEtablissement2 = new MyCayenneDataObject(etablissement);
+		EntityCayenneDataObject cayenneEtablissement = new EntityCayenneDataObject(etablissement);
+		EntityCayenneDataObject cayenneEtablissement2 = new EntityCayenneDataObject(etablissement);
 		context.registerNewObject(cayenneEtablissement);
 		context.registerNewObject(cayenneEtablissement2);
 		Directeur directeur = session.create(Directeur.class);
 		directeur.setName("David");
 		etablissement.setDirecteur(directeur);
-		MyCayenneDataObject cayenneDirecteur = new MyCayenneDataObject(directeur);
+		EntityCayenneDataObject cayenneDirecteur = new EntityCayenneDataObject(directeur);
 		context.registerNewObject(cayenneDirecteur);	
 		context.commitChanges();
 	}
@@ -71,7 +71,7 @@ public class TestCayenneDataObjectWrapper extends TestCase{
 		ObjectContext context = cayenneRuntime.getContext();
 		Expression e = ExpressionFactory.likeIgnoreCaseExp("name", "%ATIR%");
 		SelectQuery q = new SelectQuery(Etablissement.class.getSimpleName());
-		for (MyCayenneDataObject obj :  (Collection<MyCayenneDataObject>)context.performQuery(q)){
+		for (EntityCayenneDataObject obj :  (Collection<EntityCayenneDataObject>)context.performQuery(q)){
 			System.out.println(obj);
 		}
 	}
@@ -81,7 +81,7 @@ public class TestCayenneDataObjectWrapper extends TestCase{
 		ServerRuntime cayenneRuntime = new ServerRuntime("cayenne-datamap.xml");
 		ObjectContext context = cayenneRuntime.getContext();
 		ObjectIdQuery query = new ObjectIdQuery(new ObjectId(Etablissement.class.getSimpleName(),"id","7b08ff41-3413-4d23-9268-0b812bb1f434"));
-		MyCayenneDataObject cayenneDO = (MyCayenneDataObject) context.performQuery(query).get(0);
+		EntityCayenneDataObject cayenneDO = (EntityCayenneDataObject) context.performQuery(query).get(0);
 		System.out.println(cayenneDO);
 	}
 	public Session buildSession() {
