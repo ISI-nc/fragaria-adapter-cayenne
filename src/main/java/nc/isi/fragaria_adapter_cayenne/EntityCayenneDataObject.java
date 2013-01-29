@@ -44,10 +44,13 @@ public class EntityCayenneDataObject extends CayenneDataObject implements DataOb
 	
 	@Override
 	public Object readProperty(String propName) {
-		if(source==Source.ENTITY){
+		switch (source) {
+		case ENTITY:
 			return readPropertyFromEntity(propName);
-		}else{
+		case DB:
 			return readPropertyFromDb(propName);
+		default:
+			throw new RuntimeException("La source doit être déterminée");
 		}
 	}
 
