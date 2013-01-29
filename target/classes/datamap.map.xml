@@ -17,6 +17,7 @@
 		<obj-attribute name="name" type="java.lang.String" db-attribute-path="name"/>
 	</obj-entity>
 	<obj-entity name="Etablissement" dbEntityName="etablissement" superClassName="nc.isi.fragaria_adapter_cayenne.MyCayenneDataObject">
+		<obj-attribute name="directeur" type="char" db-attribute-path="iddirecteur"/>
 		<obj-attribute name="name" type="java.lang.String" db-attribute-path="name"/>
 	</obj-entity>
 	<db-relationship name="etablissementArray" source="directeur" target="etablissement" toMany="true">
@@ -25,6 +26,4 @@
 	<db-relationship name="toDirecteur" source="etablissement" target="directeur" toMany="false">
 		<db-attribute-pair source="iddirecteur" target="id"/>
 	</db-relationship>
-	<obj-relationship name="etablissements" source="Directeur" target="Etablissement" deleteRule="Deny" db-relationship-path="etablissementArray"/>
-	<obj-relationship name="directeur" source="Etablissement" target="Directeur" deleteRule="Nullify" db-relationship-path="toDirecteur"/>
 </data-map>

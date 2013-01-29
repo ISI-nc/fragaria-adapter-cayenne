@@ -50,9 +50,13 @@ public class MyCayenneDataObject extends CayenneDataObject implements DataObject
 	}
 
 	private Object readPropertyFromEntity(String propName) {
-		if(isEntity(entity.getMetadata().read(entity, propName))){
+		if(Entity.class.isAssignableFrom(entity.getMetadata().propertyType(propName))){
+			
 			Entity prop = (Entity) entity.getMetadata().read(entity, propName);
-			return prop.getId();
+			if(prop!=null)
+				return prop.getId();
+			else
+				return null;
 		}else
 			return entity.getMetadata().read(entity, propName);
 	}
@@ -75,25 +79,11 @@ public class MyCayenneDataObject extends CayenneDataObject implements DataObject
 		    return object;
 	}
 	
-	protected boolean isEntity(Object o) {
-		return o != null && isEntity(o.getClass());
-	}
+
 	
 	
 
-	protected boolean isEntity(Class<?> cl) {
-		Boolean isEntity = false;
-		Class<?> type = cl;
-		while(type!=null){
-			if(type.equals(Entity.class)){
-				isEntity = true;
-				break;
-			}else{
-				type = type.getSuperclass();
-			}
-		}
-		return isEntity;
-	}
+	
 
 	public Source getSource() {
 		return source;
