@@ -2,11 +2,12 @@ package nc.isi.fragaria_adapter_cayenne;
 
 
 
-import nc.isi.fragaria_adapter_rewrite.entities.AbstractEntity;
+import static com.google.common.base.Preconditions.checkNotNull;
 import nc.isi.fragaria_adapter_rewrite.entities.Entity;
 
 import org.apache.cayenne.CayenneDataObject;
 import org.apache.cayenne.DataObject;
+import org.apache.cayenne.Fault;
 import org.apache.cayenne.ObjectId;
 /**
  * 
@@ -15,31 +16,63 @@ import org.apache.cayenne.ObjectId;
  * les fonctionnalités Cayenne. 
  */
 public class MyCayenneDataObject extends CayenneDataObject implements DataObject{
-	private AbstractEntity entity;
+	private Entity entity;
+	private Source source;
 	
-	public MyCayenneDataObject(AbstractEntity entity) {
+	public MyCayenneDataObject() {
 		super();
-		this.entity = entity;
-		this.objectId = new ObjectId(entity.getClass().getSimpleName(), "id", entity.getId());
+		source = Source.DB;
 	}
 	
-	public void update(AbstractEntity modifiedEntity){
-		if(entity.getId()==modifiedEntity.getId())
+	public MyCayenneDataObject(Entity entity) {
+		super();
+		checkNotNull(entity);
+		this.entity = entity;
+		this.objectId = new ObjectId(entity.getClass().getSimpleName(), "id", entity.getId());
+		source = Source.ENTITY;
+	}
+	
+	public void update(Entity modifiedEntity){
+		checkNotNull(entity);
+		if(entity.getId() == modifiedEntity.getId())
 			this.entity = modifiedEntity;
 		else
 			throw new RuntimeException("Impossible d'updater l'objet (id : "+entity.getId()+" ne correspond pas à l'id : "+modifiedEntity.getId());
 	}
-
-	//TODO prendre exemple sur class cayenne etab,medecin patient dans v0 pour regarder quelles methodes sont utilisées et les implémenter
 	
 	@Override
 	public Object readProperty(String propName) {
+		if(source==Source.ENTITY){
+			return readPropertyFromEntity(propName);
+		}else{
+			return readPropertyFromDb(propName);
+		}
+	}
+
+	private Object readPropertyFromEntity(String propName) {
 		if(isEntity(entity.getMetadata().read(entity, propName))){
 			Entity prop = (Entity) entity.getMetadata().read(entity, propName);
-			this.setToOneTarget(propName, new MyCayenneDataObject((AbstractEntity) prop), false);
 			return prop.getId();
 		}else
 			return entity.getMetadata().read(entity, propName);
+	}
+
+	private Object readPropertyFromDb(String propName) {
+		if (objectContext != null) {
+		        // will resolve faults ourselves below as checking class descriptors for the
+		        // "lazyFaulting" flag is inefficient. Passing "false" here to suppress fault
+		        // processing
+		        objectContext.prepareForAccess(this, propName, false);
+		    }
+
+		    Object object = readPropertyDirectly(propName);
+
+		    if (object instanceof Fault) {
+		        object = ((Fault) object).resolveFault(this, propName);
+		        writePropertyDirectly(propName, object);
+		    }
+
+		    return object;
 	}
 	
 	protected boolean isEntity(Object o) {
@@ -49,16 +82,20 @@ public class MyCayenneDataObject extends CayenneDataObject implements DataObject
 	
 
 	protected boolean isEntity(Class<?> cl) {
-		Boolean isModel = false;
+		Boolean isEntity = false;
 		Class<?> type = cl;
 		while(type!=null){
 			if(type.equals(Entity.class)){
-				isModel = true;
+				isEntity = true;
 				break;
 			}else{
 				type = type.getSuperclass();
 			}
 		}
-		return isModel;
+		return isEntity;
+	}
+
+	public Source getSource() {
+		return source;
 	}
 }
