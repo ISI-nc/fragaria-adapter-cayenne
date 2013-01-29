@@ -7,7 +7,12 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import nc.isi.fragaria_adapter_rewrite.dao.CollectionQueryResponse;
+import nc.isi.fragaria_adapter_rewrite.dao.IdQuery;
+import nc.isi.fragaria_adapter_rewrite.dao.Query;
+import nc.isi.fragaria_adapter_rewrite.dao.SearchQuery;
 import nc.isi.fragaria_adapter_rewrite.dao.adapters.AbstractAdapter;
+import nc.isi.fragaria_adapter_rewrite.dao.adapters.ElasticSearchAdapter;
 import nc.isi.fragaria_adapter_rewrite.entities.Entity;
 import nc.isi.fragaria_adapter_rewrite.entities.EntityMetadata;
 import nc.isi.fragaria_adapter_rewrite.enums.State;
@@ -27,6 +32,7 @@ import com.google.common.collect.Multimap;
 
 public class CayenneAdapter extends AbstractAdapter{
 	private final DataSourceProvider dataSourceProvider;
+	private final ElasticSearchAdapter elasticSearchAdapter;
 	private static final long MAX_INSTANCE_TIME = 60L;
 	private final LoadingCache<String, ObjectContext> contextCache = CacheBuilder
 			.newBuilder()
@@ -41,10 +47,46 @@ public class CayenneAdapter extends AbstractAdapter{
 
 			});
 	
-	public CayenneAdapter(DataSourceProvider dataSourceProvider) {
+	public CayenneAdapter(DataSourceProvider dataSourceProvider,
+			ElasticSearchAdapter elasticSearchAdapter) {
 		this.dataSourceProvider = dataSourceProvider;
+		this.elasticSearchAdapter = elasticSearchAdapter;
+	}
+	public <T extends Entity> CollectionQueryResponse<T> executeQuery(
+			final Query<T> query) {
+		checkNotNull(query);
+		if (query instanceof IdQuery) {
+			throw new IllegalArgumentException(
+					"Impossible de renvoyer une Collection depuis une IdQuery");
+		}
+		//TODO
+//		if (query instanceof ByViewQuery) {
+//			ByViewQuery<T> bVQuery = (ByViewQuery<T>) query;
+//			CollectionQueryResponse<T> response = executeQuery(
+//					buildViewQuery(bVQuery), bVQuery.getResultType());
+//			if (bVQuery.getPredicate() == null) {
+//				return response;
+//			}
+//			T entity = alias(query.getResultType());
+//			return buildQueryResponse(from($(entity), response.getResponse())
+//					.where(bVQuery.getPredicate()).list($(entity)));
+//		}
+		if (query instanceof SearchQuery) {
+			return elasticSearchAdapter.executeQuery((SearchQuery<T>) query);
+		}
+		throw new IllegalArgumentException(String.format(
+				"Type de query inconnu : %s", query.getClass()));
 	}
 	
+//	protected <T extends Entity> ViewQuery buildViewQuery(ByViewQuery<T> bVQuery) {
+//		checkNotNull(bVQuery);
+//		ViewQuery vQuery = new ViewQuery().designDocId(
+//				buildDesignDocId(bVQuery)).viewName(
+//				bVQuery.getView().getSimpleName().toLowerCase());
+//		return bVQuery.getFilter().values().isEmpty() ? vQuery : vQuery
+//				.keys(bVQuery.getFilter().values());
+//	}
+//	
 	public void post(Entity... entities) {
 		LinkedList<Entity> list = new LinkedList<>();
 		for (Entity entity : entities) {
