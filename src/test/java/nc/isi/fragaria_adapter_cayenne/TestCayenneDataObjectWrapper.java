@@ -1,6 +1,7 @@
 package nc.isi.fragaria_adapter_cayenne;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -19,7 +20,12 @@ import nc.isi.fragaria_adapter_rewrite.entities.views.ViewConfig;
 import nc.isi.fragaria_adapter_rewrite.services.FragariaDomainModule;
 
 import org.apache.cayenne.ObjectContext;
+import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.configuration.server.ServerRuntime;
+import org.apache.cayenne.exp.Expression;
+import org.apache.cayenne.exp.ExpressionFactory;
+import org.apache.cayenne.query.ObjectIdQuery;
+import org.apache.cayenne.query.SelectQuery;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 
@@ -35,9 +41,8 @@ public class TestCayenneDataObjectWrapper extends TestCase{
 		ServerRuntime cayenneRuntime = new ServerRuntime("cayenne-datamap.xml");
 		ObjectContext context = cayenneRuntime.getContext();
 		Etablissement etablissement = session.create(Etablissement.class);
-		etablissement.setName("ATIR");
+		etablissement.setName("ATIRSimple");
 		MyCayenneDataObject cayenneEtablissement = new MyCayenneDataObject(etablissement);
-		cayenneEtablissement.writeProperty("name", "ATIR");
 		context.registerNewObject(cayenneEtablissement);
 		context.commitChanges();
 	}
@@ -50,41 +55,35 @@ public class TestCayenneDataObjectWrapper extends TestCase{
 		etablissement.setName("ATIR2");
 
 		MyCayenneDataObject cayenneEtablissement = new MyCayenneDataObject(etablissement);
+		MyCayenneDataObject cayenneEtablissement2 = new MyCayenneDataObject(etablissement);
 		context.registerNewObject(cayenneEtablissement);
+		context.registerNewObject(cayenneEtablissement2);
 		Directeur directeur = session.create(Directeur.class);
 		directeur.setName("David");
 		etablissement.setDirecteur(directeur);
 		MyCayenneDataObject cayenneDirecteur = new MyCayenneDataObject(directeur);
-		context.registerNewObject(cayenneDirecteur);
-
-		
-		
-
-		
-		cayenneEtablissement.update(etablissement);
-		
+		context.registerNewObject(cayenneDirecteur);	
 		context.commitChanges();
 	}
 	
 	public void testGetFromCayenne(){
-//		Session session = buildSession();
-//		Etablissement etablissement = session.create(Etablissement.class);
-//		etablissement.setName("ATIR2");
-//		MyCayenneDataObject cayenneEtablissement = new MyCayenneDataObject(etablissement);
-//		context.registerNewObject(cayenneEtablissement);
-//		Directeur directeur = session.create(Directeur.class);
-//		directeur.setName("David");
-//		MyCayenneDataObject cayenneDirecteur = new MyCayenneDataObject(directeur);
-//		context.registerNewObject(cayenneDirecteur);
-//
-//		etablissement.setDirecteur(directeur);
-//		cayenneEtablissement.setToOneTarget("directeur", cayenneDirecteur, false);
-//
-//		cayenneEtablissement.update(etablissement);
-//		
-//		context.commitChanges();
+		ServerRuntime cayenneRuntime = new ServerRuntime("cayenne-datamap.xml");
+		ObjectContext context = cayenneRuntime.getContext();
+		Expression e = ExpressionFactory.likeIgnoreCaseExp("name", "%ATIR%");
+		SelectQuery q = new SelectQuery(Etablissement.class.getSimpleName());
+		for (MyCayenneDataObject obj :  (Collection<MyCayenneDataObject>)context.performQuery(q)){
+			System.out.println(obj);
+		}
 	}
 	
+	
+	public void testSpecificGetFromCayenne(){
+		ServerRuntime cayenneRuntime = new ServerRuntime("cayenne-datamap.xml");
+		ObjectContext context = cayenneRuntime.getContext();
+		ObjectIdQuery query = new ObjectIdQuery(new ObjectId(Etablissement.class.getSimpleName(),"id","7b08ff41-3413-4d23-9268-0b812bb1f434"));
+		MyCayenneDataObject cayenneDO = (MyCayenneDataObject) context.performQuery(query).get(0);
+		System.out.println(cayenneDO);
+	}
 	public Session buildSession() {
 
 		SessionImpl session = new SessionImpl(new AdapterManager() {

@@ -17,11 +17,11 @@ import org.apache.cayenne.ObjectId;
  */
 public class MyCayenneDataObject extends CayenneDataObject implements DataObject{
 	private Entity entity;
-	private Source source;
+	private final Source source;
 	
 	public MyCayenneDataObject() {
 		super();
-		source = Source.DB;
+		this.source = Source.DB;
 	}
 	
 	public MyCayenneDataObject(Entity entity) {
@@ -29,13 +29,15 @@ public class MyCayenneDataObject extends CayenneDataObject implements DataObject
 		checkNotNull(entity);
 		this.entity = entity;
 		this.objectId = new ObjectId(entity.getClass().getSimpleName(), "id", entity.getId());
-		source = Source.ENTITY;
+		this.source = Source.ENTITY;
 	}
 	
-	public void update(Entity modifiedEntity){
+	public void updateFrom(Entity modifiedEntity){
 		checkNotNull(entity);
-		if(entity.getId() == modifiedEntity.getId())
+		if(entity.getId() == modifiedEntity.getId()){
 			this.entity = modifiedEntity;
+			this.setPersistenceState(4);
+		}
 		else
 			throw new RuntimeException("Impossible d'updater l'objet (id : "+entity.getId()+" ne correspond pas à l'id : "+modifiedEntity.getId());
 	}

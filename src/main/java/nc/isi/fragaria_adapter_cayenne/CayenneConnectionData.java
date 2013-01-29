@@ -2,10 +2,6 @@ package nc.isi.fragaria_adapter_cayenne;
 
 import nc.isi.fragaria_adapter_rewrite.resources.ConnectionData;
 
-
-
-
-
 public class CayenneConnectionData implements ConnectionData {
 	protected String getDatamapName() {
 		return datamapName;
