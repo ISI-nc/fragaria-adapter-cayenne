@@ -107,8 +107,7 @@ public class CayenneAdapter extends AbstractAdapter{
 			try {
 				contextCache.get(key).commitChanges();
 			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				throw new RuntimeException(e);
 			}
 		}
 		for (Entity entity : filtered) {
