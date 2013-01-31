@@ -1,6 +1,7 @@
 package nc.isi.fragaria_adapter_cayenne;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.mysema.query.alias.Alias.$;
 import static com.mysema.query.alias.Alias.alias;
 import static com.mysema.query.collections.MiniApi.from;
@@ -32,11 +33,13 @@ import nc.isi.fragaria_adapter_rewrite.enums.State;
 import nc.isi.fragaria_adapter_rewrite.resources.DataSourceProvider;
 import nc.isi.fragaria_adapter_rewrite.resources.Datasource;
 
+import org.apache.cayenne.Cayenne;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
+import org.apache.cayenne.query.ObjectIdQuery;
 import org.apache.cayenne.query.SQLTemplate;
 import org.apache.cayenne.query.SelectQuery;
 
@@ -85,24 +88,9 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 			ByViewQuery<T> bVQuery = (ByViewQuery<T>) query;
 			Class<T> resultType = (Class<T>)bVQuery.getResultType();
 			ObjectContext context = getContext(entityMetadataFactory.create(resultType));
-			
 			if(bVQuery.getView()!=null){
-				String sql = "select * from $view";
-				Map<String, Object> filter = bVQuery.getFilter();
-				if(filter.size()>0)
-					sql+=" where ";
-				for(String key : filter.keySet()){
-					sql+=key+" #bindEqual($"+key+")";
-				}
-				SQLTemplate selectQuery = new SQLTemplate(resultType.getSimpleName(),sql);
-				selectQuery.setParameters(Collections.singletonMap(
-						"view", bVQuery.getView().getSimpleName()));
-				for(String key : filter.keySet()){
-					selectQuery.setParameters(Collections.singletonMap(
-							key, filter.get(key)));
-				}
-				Collection<EntityCayenneDataObject> result = (Collection<EntityCayenneDataObject>) context.performQuery(selectQuery);	
-				CollectionQueryResponse<T> response = new CollectionQueryResponse<>(serializer.deSerialize(result, resultType,bVQuery.getView()));
+				CollectionQueryResponse<T> response = selectFromView(bVQuery,
+						resultType, context);
 				if (bVQuery.getPredicate() == null) {
 					return response;
 				}
@@ -110,17 +98,8 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 				return buildQueryResponse(from($(entity), response.getResponse())
 						.where(bVQuery.getPredicate()).list($(entity)));
 			}else if(bVQuery.getView() == null || bVQuery.getView() == All.class){
-				Expression e = null;
-				Map<String, Object> filter = bVQuery.getFilter();
-				for(String key : filter.keySet()){
-					if(e==null)
-						e = ExpressionFactory.likeIgnoreCaseExp(key,filter.get(key));
-					else
-						e.andExp(ExpressionFactory.likeIgnoreCaseExp(key,filter.get(key)));
-				}
-				SelectQuery selectQuery = new SelectQuery(resultType.getSimpleName(),e);
-				Collection<EntityCayenneDataObject> result = (Collection<EntityCayenneDataObject>) context.performQuery(selectQuery);	
-				CollectionQueryResponse<T> response = new CollectionQueryResponse<>(serializer.deSerialize(result, resultType));
+				CollectionQueryResponse<T> response = selectFromTable(bVQuery,
+						resultType, context);
 				if (bVQuery.getPredicate() == null) {
 					return response;
 				}
@@ -135,12 +114,69 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 		throw new IllegalArgumentException(String.format(
 				"Type de query inconnu : %s", query.getClass()));
 	}
+	private <T extends Entity> CollectionQueryResponse<T> selectFromTable(
+			ByViewQuery<T> bVQuery, Class<T> resultType, ObjectContext context) {
+		Expression e = null;
+		Map<String, Object> filter = bVQuery.getFilter();
+		for(String key : filter.keySet()){
+			if(e==null)
+				e = ExpressionFactory.likeIgnoreCaseExp(key,filter.get(key));
+			else
+				e.andExp(ExpressionFactory.likeIgnoreCaseExp(key,filter.get(key)));
+		}
+		SelectQuery selectQuery = new SelectQuery(resultType.getSimpleName(),e);
+		Collection<EntityCayenneDataObject> result = (Collection<EntityCayenneDataObject>) context.performQuery(selectQuery);	
+		CollectionQueryResponse<T> response = new CollectionQueryResponse<>(serializer.deSerialize(result, resultType));
+		return response;
+	}
+	private <T extends Entity> CollectionQueryResponse<T> selectFromView(
+			ByViewQuery<T> bVQuery, Class<T> resultType, ObjectContext context) {
+		Map<String, Object> filter = bVQuery.getFilter();
+		String sql = "select * from $view";
+		if(filter.size()>0)
+			sql+=" where ";
+		for(String key : filter.keySet()){
+			sql+=key+" #bindEqual($"+key+")";
+		}
+		SQLTemplate selectQuery = new SQLTemplate(resultType.getSimpleName(),sql);
+		selectQuery.setParameters(Collections.singletonMap(
+				"view", bVQuery.getView().getSimpleName()));
+		for(String key : filter.keySet()){
+			selectQuery.setParameters(Collections.singletonMap(
+					key, filter.get(key)));
+		}
+		Collection<EntityCayenneDataObject> result = (Collection<EntityCayenneDataObject>) context.performQuery(selectQuery);	
+		CollectionQueryResponse<T> response = new CollectionQueryResponse<>(serializer.deSerialize(result, resultType,bVQuery.getView()));
+		return response;
+	}
+	
+	public <T extends Entity> UniqueQueryResponse<T> executeUniqueQuery(
+			String id, Class<T> type) {
+		checkNotNull(id);
+		checkNotNull(type);
+		EntityMetadata entityMetadata = entityMetadataFactory.create(type);
+		ObjectId objectId = new ObjectId(type.getSimpleName(),"id",id);
+		ObjectIdQuery query = new ObjectIdQuery(objectId);
+		EntityCayenneDataObject cayenneDO = (EntityCayenneDataObject) Cayenne.objectForQuery(getContext(entityMetadata),query);
+		T entity = serializer.deSerialize(cayenneDO,type);
+		return buildQueryResponse(entity);
+	}
+
 	
 	@Override
 	public <T extends Entity> UniqueQueryResponse<T> executeUniqueQuery(
 			Query<T> query) {
-		// TODO Auto-generated method stub
-		return null;
+		checkNotNull(query);
+		if (query instanceof IdQuery) {
+			return executeUniqueQuery(((IdQuery<T>) query).getId(),
+					query.getResultType());
+		}
+		CollectionQueryResponse<T> response = executeQuery(query);
+		checkState(response.getResponse().size() <= 1,
+				"La requête a renvoyé trop de résultat : %s",
+				response.getResponse());
+		return buildQueryResponse(response.getResponse().size() == 0 ? null
+				: response.getResponse().iterator().next());
 	}
 	
 	public void post(Entity... entities) {
@@ -181,10 +217,6 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 		}else if(entity.getState()==State.DELETED){
 			object.setPersistenceState(6);
 		}
-	}
-
-	private ObjectId getObjectId(Entity entity) {
-		return new ObjectId(entity.getClass().getSimpleName(), "id", entity.getId());
 	}
 
 	protected ObjectContext getContext(EntityMetadata entityMetadata) {
