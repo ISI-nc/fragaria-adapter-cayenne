@@ -7,6 +7,7 @@ import java.util.List;
 import junit.framework.TestCase;
 import nc.isi.fragaria_adapter_cayenne.model.Directeur;
 import nc.isi.fragaria_adapter_cayenne.model.Etablissement;
+import nc.isi.fragaria_adapter_rewrite.dao.ByViewQuery;
 import nc.isi.fragaria_adapter_rewrite.dao.CollectionQueryResponse;
 import nc.isi.fragaria_adapter_rewrite.dao.Query;
 import nc.isi.fragaria_adapter_rewrite.dao.Session;
@@ -70,7 +71,7 @@ public class TestCayenneDataObjectWrapper extends TestCase{
 		ServerRuntime cayenneRuntime = new ServerRuntime("cayenne-datamap.xml");
 		ObjectContext context = cayenneRuntime.getContext();
 		Expression e = ExpressionFactory.likeIgnoreCaseExp("name", "%ATIR%");
-		SelectQuery q = new SelectQuery(Etablissement.class.getSimpleName());
+		SelectQuery q = new SelectQuery(Etablissement.class.getSimpleName(),e);
 		for (EntityCayenneDataObject obj :  (Collection<EntityCayenneDataObject>)context.performQuery(q)){
 			System.out.println(obj);
 		}
@@ -115,6 +116,15 @@ public class TestCayenneDataObjectWrapper extends TestCase{
 		System.out.println(n.substring(0, n.indexOf( " ")).trim());
 	}
 	
+	public void testConvertPredicate(){
+		ServerRuntime cayenneRuntime = new ServerRuntime("cayenne-datamap.xml");
+		ObjectContext context = cayenneRuntime.getContext();
+		ByViewQuery<Etablissement> viewquery = new ByViewQuery<>(Etablissement.class, null).where("name", "ATIR");
+		System.out.println(viewquery.getPredicate());
+		SQLTemplate query = new SQLTemplate("Etablissement","select * from nameetab");
+		Collection<EntityCayenneDataObject> object = context.performQuery(query);
+		System.out.println(context.performQuery(query).get(0));
+	}
 	
 	
 	public void testUpdate(){
