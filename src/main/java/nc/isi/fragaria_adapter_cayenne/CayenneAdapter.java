@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import nc.isi.fragaria_adapter_cayenne.model.Etablissement;
 import nc.isi.fragaria_adapter_cayenne.views.CayenneViewConfig;
 import nc.isi.fragaria_adapter_rewrite.dao.ByViewQuery;
 import nc.isi.fragaria_adapter_rewrite.dao.CollectionQueryResponse;
@@ -38,6 +37,7 @@ import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.query.SQLTemplate;
+import org.apache.cayenne.query.SelectQuery;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -92,18 +92,30 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 				else
 					e.andExp(ExpressionFactory.likeIgnoreCaseExp(key,filter.get(key)));
 			}
-			String sql = "select * from #view";
-			SQLTemplate selectQuery = new SQLTemplate(Etablissement.class.getSimpleName(),sql);
-			selectQuery.setParameters(Collections.singletonMap(
-					"view", bVQuery.getView().getSimpleName()));
-			Collection<EntityCayenneDataObject> result = (Collection<EntityCayenneDataObject>) context.performQuery(selectQuery);	
-			CollectionQueryResponse<T> response = new CollectionQueryResponse<>(serializer.deSerialize(result, resultType,bVQuery.getView()));
-			if (bVQuery.getPredicate() == null) {
-				return response;
+			if(bVQuery.getView()!=null){
+				String sql = "select * from #view";
+				SQLTemplate selectQuery = new SQLTemplate(resultType.getSimpleName(),sql);
+				selectQuery.setParameters(Collections.singletonMap(
+						"view", bVQuery.getView().getSimpleName()));
+				Collection<EntityCayenneDataObject> result = (Collection<EntityCayenneDataObject>) context.performQuery(selectQuery);	
+				CollectionQueryResponse<T> response = new CollectionQueryResponse<>(serializer.deSerialize(result, resultType,bVQuery.getView()));
+				if (bVQuery.getPredicate() == null) {
+					return response;
+				}
+				T entity = alias(query.getResultType());
+				return buildQueryResponse(from($(entity), response.getResponse())
+						.where(bVQuery.getPredicate()).list($(entity)));
+			}else{
+				SelectQuery selectQuery = new SelectQuery(resultType.getSimpleName(),e);
+				Collection<EntityCayenneDataObject> result = (Collection<EntityCayenneDataObject>) context.performQuery(selectQuery);	
+				CollectionQueryResponse<T> response = new CollectionQueryResponse<>(serializer.deSerialize(result, resultType));
+				if (bVQuery.getPredicate() == null) {
+					return response;
+				}
+				T entity = alias(query.getResultType());
+				return buildQueryResponse(from($(entity), response.getResponse())
+						.where(bVQuery.getPredicate()).list($(entity)));
 			}
-			T entity = alias(query.getResultType());
-			return buildQueryResponse(from($(entity), response.getResponse())
-					.where(bVQuery.getPredicate()).list($(entity)));
 		}
 		if (query instanceof SearchQuery) {
 			return elasticSearchAdapter.executeQuery((SearchQuery<T>) query);
