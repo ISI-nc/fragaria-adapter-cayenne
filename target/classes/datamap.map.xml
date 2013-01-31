@@ -26,5 +26,4 @@
 	<db-relationship name="toDirecteur" source="etablissement" target="directeur" toMany="false">
 		<db-attribute-pair source="iddirecteur" target="id"/>
 	</db-relationship>
-	<obj-relationship name="etablissementArray" source="Directeur" target="Etablissement" deleteRule="Deny" db-relationship-path="etablissementArray"/>
 </data-map>

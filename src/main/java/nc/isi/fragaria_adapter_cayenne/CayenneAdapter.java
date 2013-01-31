@@ -2,19 +2,24 @@ package nc.isi.fragaria_adapter_cayenne;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import nc.isi.fragaria_adapter_cayenne.views.CayenneViewConfig;
 import nc.isi.fragaria_adapter_rewrite.dao.CollectionQueryResponse;
 import nc.isi.fragaria_adapter_rewrite.dao.IdQuery;
 import nc.isi.fragaria_adapter_rewrite.dao.Query;
 import nc.isi.fragaria_adapter_rewrite.dao.SearchQuery;
+import nc.isi.fragaria_adapter_rewrite.dao.UniqueQueryResponse;
 import nc.isi.fragaria_adapter_rewrite.dao.adapters.AbstractAdapter;
+import nc.isi.fragaria_adapter_rewrite.dao.adapters.Adapter;
 import nc.isi.fragaria_adapter_rewrite.dao.adapters.ElasticSearchAdapter;
 import nc.isi.fragaria_adapter_rewrite.entities.Entity;
 import nc.isi.fragaria_adapter_rewrite.entities.EntityMetadata;
+import nc.isi.fragaria_adapter_rewrite.entities.views.ViewConfig;
 import nc.isi.fragaria_adapter_rewrite.enums.State;
 import nc.isi.fragaria_adapter_rewrite.resources.DataSourceProvider;
 import nc.isi.fragaria_adapter_rewrite.resources.Datasource;
@@ -23,6 +28,7 @@ import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.query.ObjectIdQuery;
+import org.apache.cayenne.query.SQLTemplate;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -30,7 +36,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 
-public class CayenneAdapter extends AbstractAdapter{
+public class CayenneAdapter extends AbstractAdapter implements Adapter{
 	private final DataSourceProvider dataSourceProvider;
 	private final ElasticSearchAdapter elasticSearchAdapter;
 	private static final long MAX_INSTANCE_TIME = 60L;
@@ -87,6 +93,13 @@ public class CayenneAdapter extends AbstractAdapter{
 //				.keys(bVQuery.getFilter().values());
 //	}
 //	
+	@Override
+	public <T extends Entity> UniqueQueryResponse<T> executeUniqueQuery(
+			Query<T> query) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	public void post(Entity... entities) {
 		LinkedList<Entity> list = new LinkedList<>();
 		for (Entity entity : entities) {
@@ -219,6 +232,35 @@ public class CayenneAdapter extends AbstractAdapter{
 			}
 		}
 		return isEntity;
+	}
+
+	@Override
+	public Boolean exist(ViewConfig viewConfig, EntityMetadata entityMetadata) {
+		ObjectContext context = getContext(entityMetadata);
+		Boolean exists = true;
+		String sql = "select true from $tableName";
+		try {
+			SQLTemplate checkIfExists = new SQLTemplate(entityMetadata.getEntityClass().getSimpleName(),sql);
+			checkIfExists.setParameters(Collections.singletonMap(
+					"tableName", entityMetadata.getEntityClass().getSimpleName().toLowerCase()));
+			context.performGenericQuery(checkIfExists);
+		} catch (Exception e) {
+			exists = false;
+ 		}
+			return exists;
+	}
+	@Override
+	public void buildView(ViewConfig viewConfig, EntityMetadata entityMetadata) {
+		checkNotNull(entityMetadata);
+		checkNotNull(viewConfig);
+		if (!(viewConfig instanceof CayenneViewConfig))
+			throw new IllegalArgumentException(String.format(
+					"Seules les %s sont géré par %s", CayenneViewConfig.class,
+					CayenneAdapter.class));
+		ObjectContext context = checkNotNull(getContext(entityMetadata));
+		CayenneViewConfig cayenneViewConfig = (CayenneViewConfig)viewConfig;
+		SQLTemplate createView = new SQLTemplate(entityMetadata.getEntityClass().getSimpleName(),cayenneViewConfig.getScript());	
+		context.performGenericQuery(createView);
 	}
 	
 }

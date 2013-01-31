@@ -32,12 +32,11 @@
 			<artifactId>postgresql</artifactId>
 			<version>9.1-901.jdbc4</version>
 		</dependency> 
-			<dependency>
+		<dependency>
 			<groupId>org.apache.cayenne.plugins</groupId>
 			<artifactId>maven-cayenne-modeler-plugin</artifactId>
 			<version>3.1M3</version>
-		</dependency>
-              
+		</dependency>     
 	</dependencies>
 	<build>
 		<finalName>fragaria-adapter-cayenne</finalName>

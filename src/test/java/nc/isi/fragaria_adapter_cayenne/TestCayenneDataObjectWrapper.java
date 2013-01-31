@@ -20,11 +20,11 @@ import nc.isi.fragaria_adapter_rewrite.entities.views.ViewConfig;
 import nc.isi.fragaria_adapter_rewrite.services.FragariaDomainModule;
 
 import org.apache.cayenne.ObjectContext;
-import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
-import org.apache.cayenne.query.ObjectIdQuery;
+import org.apache.cayenne.map.DataMap;
+import org.apache.cayenne.query.SQLTemplate;
 import org.apache.cayenne.query.SelectQuery;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
@@ -76,14 +76,63 @@ public class TestCayenneDataObjectWrapper extends TestCase{
 		}
 	}
 	
-	
-	public void testSpecificGetFromCayenne(){
+	public void testFromCayenne(){
 		ServerRuntime cayenneRuntime = new ServerRuntime("cayenne-datamap.xml");
 		ObjectContext context = cayenneRuntime.getContext();
-		ObjectIdQuery query = new ObjectIdQuery(new ObjectId(Etablissement.class.getSimpleName(),"id","7b08ff41-3413-4d23-9268-0b812bb1f434"));
-		EntityCayenneDataObject cayenneDO = (EntityCayenneDataObject) context.performQuery(query).get(0);
-		System.out.println(cayenneDO);
+		//Object couille = context.performGenericQuery(new Q)
+		DataMap map = context.getEntityResolver().getDataMap("datamap");
+		System.out.println(map.getName());
+//		DbEntity dbEntity = new DbEntity("cuile");
+//		dbEntity.setName("cuile");
+//		dbEntity.setSchema("public");
+//		ObjEntity objEntity = new ObjEntity("Cuile");
+//		objEntity.setDbEntityName("cuile");
+//		objEntity.setSuperClassName("nc.isi.fragaria_adapter_cayenne.EntityCayenneDataObject");
+//		map.addDbEntity(dbEntity);
+//		map.addObjEntity(objEntity);
+		SQLTemplate query = new SQLTemplate("Etablissement","select * from nameetab");
+		Collection<EntityCayenneDataObject> object = context.performQuery(query);
+		System.out.println(context.performQuery(query).get(0));
+		
+		
+		Boolean exists = true;
+		try {
+			SQLTemplate query2 = new SQLTemplate("Etablissement","select true from test");
+			//SQLTemplate query2 = new SQLTemplate("Etablissement","create view test as select * from etablissement");
+			context.performGenericQuery(query2);
+		} catch (Exception e) {
+			exists = false;
+ 		}
+		System.out.println(exists);
+		
 	}
+	
+	public void testParseSql(){
+		String sqlScript = "create VIEW test as select * from etablissement";
+		System.out.println(sqlScript.indexOf("view"));
+		System.out.println(sqlScript.substring(sqlScript.indexOf("view")+5, sqlScript.length()).trim());
+		String n = sqlScript.substring(sqlScript.indexOf("view")+5, sqlScript.length()).trim();
+		System.out.println(n.substring(0, n.indexOf( " ")).trim());
+	}
+	
+	
+	
+	public void testUpdate(){
+		ServerRuntime cayenneRuntime = new ServerRuntime("cayenne-datamap.xml");
+		ObjectContext context = cayenneRuntime.getContext();
+		Session session = buildSession();
+		Etablissement etablissement = session.create(Etablissement.class);
+		etablissement.setName("TESTUPDATE");
+		context.registerNewObject(new EntityCayenneDataObject(etablissement));
+		context.commitChanges();
+		etablissement.setName("TESTUPDATEMODIFIED");
+		EntityCayenneDataObject cay = new EntityCayenneDataObject(etablissement);
+		context.registerNewObject(cay);
+		cay.updateFrom(etablissement);
+		context.commitChanges();
+	}
+	
+	
 	public Session buildSession() {
 
 		SessionImpl session = new SessionImpl(new AdapterManager() {
