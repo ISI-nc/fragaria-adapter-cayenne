@@ -48,7 +48,12 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
-
+/**
+ * 
+ * @author bjonathas
+ *
+ * Allow user to manipulate data from relational database.
+ */
 public class CayenneAdapter extends AbstractAdapter implements Adapter{
 	private final DataSourceProvider dataSourceProvider;
 	private final ElasticSearchAdapter elasticSearchAdapter;
