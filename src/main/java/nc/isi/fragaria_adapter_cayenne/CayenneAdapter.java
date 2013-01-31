@@ -26,6 +26,7 @@ import nc.isi.fragaria_adapter_rewrite.dao.adapters.ElasticSearchAdapter;
 import nc.isi.fragaria_adapter_rewrite.entities.Entity;
 import nc.isi.fragaria_adapter_rewrite.entities.EntityMetadata;
 import nc.isi.fragaria_adapter_rewrite.entities.EntityMetadataFactory;
+import nc.isi.fragaria_adapter_rewrite.entities.views.GenericQueryViews.All;
 import nc.isi.fragaria_adapter_rewrite.entities.views.ViewConfig;
 import nc.isi.fragaria_adapter_rewrite.enums.State;
 import nc.isi.fragaria_adapter_rewrite.resources.DataSourceProvider;
@@ -84,19 +85,22 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 			ByViewQuery<T> bVQuery = (ByViewQuery<T>) query;
 			Class<T> resultType = (Class<T>)bVQuery.getResultType();
 			ObjectContext context = getContext(entityMetadataFactory.create(resultType));
-			Expression e = null;
-			Map<String, Object> filter = bVQuery.getFilter();
-			for(String key : filter.keySet()){
-				if(e==null)
-					e = ExpressionFactory.likeIgnoreCaseExp(key,filter.get(key));
-				else
-					e.andExp(ExpressionFactory.likeIgnoreCaseExp(key,filter.get(key)));
-			}
+			
 			if(bVQuery.getView()!=null){
-				String sql = "select * from #view";
+				String sql = "select * from $view";
+				Map<String, Object> filter = bVQuery.getFilter();
+				if(filter.size()>0)
+					sql+=" where ";
+				for(String key : filter.keySet()){
+					sql+=key+" #bindEqual($"+key+")";
+				}
 				SQLTemplate selectQuery = new SQLTemplate(resultType.getSimpleName(),sql);
 				selectQuery.setParameters(Collections.singletonMap(
 						"view", bVQuery.getView().getSimpleName()));
+				for(String key : filter.keySet()){
+					selectQuery.setParameters(Collections.singletonMap(
+							key, filter.get(key)));
+				}
 				Collection<EntityCayenneDataObject> result = (Collection<EntityCayenneDataObject>) context.performQuery(selectQuery);	
 				CollectionQueryResponse<T> response = new CollectionQueryResponse<>(serializer.deSerialize(result, resultType,bVQuery.getView()));
 				if (bVQuery.getPredicate() == null) {
@@ -105,7 +109,15 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 				T entity = alias(query.getResultType());
 				return buildQueryResponse(from($(entity), response.getResponse())
 						.where(bVQuery.getPredicate()).list($(entity)));
-			}else{
+			}else if(bVQuery.getView() == null || bVQuery.getView() == All.class){
+				Expression e = null;
+				Map<String, Object> filter = bVQuery.getFilter();
+				for(String key : filter.keySet()){
+					if(e==null)
+						e = ExpressionFactory.likeIgnoreCaseExp(key,filter.get(key));
+					else
+						e.andExp(ExpressionFactory.likeIgnoreCaseExp(key,filter.get(key)));
+				}
 				SelectQuery selectQuery = new SelectQuery(resultType.getSimpleName(),e);
 				Collection<EntityCayenneDataObject> result = (Collection<EntityCayenneDataObject>) context.performQuery(selectQuery);	
 				CollectionQueryResponse<T> response = new CollectionQueryResponse<>(serializer.deSerialize(result, resultType));
@@ -267,7 +279,7 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 	public Boolean exist(ViewConfig viewConfig, EntityMetadata entityMetadata) {
 		ObjectContext context = getContext(entityMetadata);
 		Boolean exists = true;
-		String sql = "select true from #tableName";
+		String sql = "select true from $tableName";
 		try {
 			SQLTemplate checkIfExists = new SQLTemplate(entityMetadata.getEntityClass().getSimpleName(),sql);
 			checkIfExists.setParameters(Collections.singletonMap(
