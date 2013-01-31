@@ -122,8 +122,9 @@ public class TestCayenneDataObjectWrapper extends TestCase{
 		ByViewQuery<Etablissement> viewquery = new ByViewQuery<>(Etablissement.class, null).where("name", "ATIR");
 		System.out.println(viewquery.getPredicate());
 		SQLTemplate query = new SQLTemplate("Etablissement","select * from nameetab");
-		Collection<EntityCayenneDataObject> object = context.performQuery(query);
-		System.out.println(context.performQuery(query).get(0));
+		for (EntityCayenneDataObject obj :  (Collection<EntityCayenneDataObject>)context.performQuery(query)){
+			System.out.println(obj);
+		}
 	}
 	
 	
