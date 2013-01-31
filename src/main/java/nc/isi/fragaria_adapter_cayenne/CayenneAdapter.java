@@ -93,25 +93,20 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 			ByViewQuery<T> bVQuery = (ByViewQuery<T>) query;
 			Class<T> resultType = (Class<T>)bVQuery.getResultType();
 			ObjectContext context = getContext(entityMetadataFactory.create(resultType));
+			CollectionQueryResponse<T> response = null;
 			if(bVQuery.getView()!=null){
-				CollectionQueryResponse<T> response = selectFromView(bVQuery,
+				response = selectFromView(bVQuery,
 						resultType, context);
-				if (bVQuery.getPredicate() == null) {
-					return response;
-				}
-				T entity = alias(query.getResultType());
-				return buildQueryResponse(from($(entity), response.getResponse())
-						.where(bVQuery.getPredicate()).list($(entity)));
 			}else if(bVQuery.getView() == null || bVQuery.getView() == All.class){
-				CollectionQueryResponse<T> response = selectFromTable(bVQuery,
+				response = selectFromTable(bVQuery,
 						resultType, context);
-				if (bVQuery.getPredicate() == null) {
-					return response;
-				}
-				T entity = alias(query.getResultType());
-				return buildQueryResponse(from($(entity), response.getResponse())
-						.where(bVQuery.getPredicate()).list($(entity)));
 			}
+			if (bVQuery.getPredicate() == null) {
+				return response;
+			}
+			T entity = alias(query.getResultType());
+			return buildQueryResponse(from($(entity), response.getResponse())
+					.where(bVQuery.getPredicate()).list($(entity)));
 		}
 		if (query instanceof SearchQuery) {
 			return elasticSearchAdapter.executeQuery((SearchQuery<T>) query);

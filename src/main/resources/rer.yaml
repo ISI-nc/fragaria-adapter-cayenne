@@ -1,5 +1,8 @@
-type           : CouchDB
-canEmbed       : true
-connectionData :
-  url    : http://localhost:5984/
-  dbName : rer
+CREATE OR REPLACE VIEW etablissementtest AS 
+ SELECT etablissement.id, etablissement.name
+   FROM etablissement;
+
+ALTER TABLE etablissementtest
+  OWNER TO dev;
+
+
