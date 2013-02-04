@@ -3,12 +3,14 @@ package nc.isi.fragaria_adapter_cayenne.model;
 import java.util.Collection;
 
 import nc.isi.fragaria_adapter_rewrite.annotations.BackReference;
+import nc.isi.fragaria_adapter_rewrite.annotations.DsKey;
 import nc.isi.fragaria_adapter_rewrite.entities.AbstractEntity;
 import nc.isi.fragaria_adapter_rewrite.entities.EntityMetadataFactory;
 import nc.isi.fragaria_adapter_rewrite.entities.ObjectResolver;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+@DsKey("loc")
 public class Directeur extends AbstractEntity{
 	public static final String NAME = "name";
 	public static final String ETABLISSEMENTS = "etablissements";

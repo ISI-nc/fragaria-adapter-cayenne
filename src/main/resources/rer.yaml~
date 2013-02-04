@@ -1,8 +1,0 @@
-CREATE OR REPLACE VIEW etablissementtest AS 
- SELECT etablissement.id, etablissement.name
-   FROM etablissement;
-
-ALTER TABLE etablissementtest
-  OWNER TO dev;
-
-

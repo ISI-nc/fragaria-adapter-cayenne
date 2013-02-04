@@ -1,5 +1,5 @@
 type           : Cayenne
 canEmbed       : false
 connectionData :
-  datamap : cayenne-datamap.xml
+  datamap : cayenne-config.xml
 

@@ -91,10 +91,7 @@ public class TestCayenneDataObjectWrapper extends TestCase{
 //		objEntity.setSuperClassName("nc.isi.fragaria_adapter_cayenne.EntityCayenneDataObject");
 //		map.addDbEntity(dbEntity);
 //		map.addObjEntity(objEntity);
-		SQLTemplate query = new SQLTemplate("Etablissement","select * from nameetab");
-		Collection<EntityCayenneDataObject> object = context.performQuery(query);
-		System.out.println(context.performQuery(query).get(0));
-		
+
 		
 		Boolean exists = true;
 		try {

@@ -1,10 +1,12 @@
 package nc.isi.fragaria_adapter_cayenne.views;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import nc.isi.fragaria_adapter_rewrite.entities.Entity;
 import nc.isi.fragaria_adapter_rewrite.entities.views.QueryView;
@@ -34,9 +36,17 @@ public class CayenneViewConfigBuilder implements ViewConfigBuilder{
 
 	private String getScript(File file) throws IOException {
 		InputStream input = null;
+		String script ="";
 		try {
 			input = new FileInputStream(file);
-			return input.toString();
+			BufferedReader br
+        	= new BufferedReader(
+        		new InputStreamReader(input));
+	    	String line;
+			while ((line = br.readLine()) != null) {
+				script+=line;
+	    	} 
+			return script;
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		} finally {

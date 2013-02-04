@@ -21,7 +21,7 @@ public class FragariaCayenneModule {
 
 	public void contributeConnectionDataBuilder(
 			MappedConfiguration<String, String> configuration) {
-		configuration.add("CouchDB", CayenneConnectionData.class.getName());
+		configuration.add("Cayenne", CayenneConnectionData.class.getName());
 	}
 
 	public void contributeAdapterManager(
@@ -36,8 +36,8 @@ public class FragariaCayenneModule {
 
 	public void contributeViewConfigBuilderProvider(
 			MappedConfiguration<String, ViewConfigBuilder> configuration,
-			CayenneViewConfigBuilder couchDbViewConfigBuilder) {
-		configuration.add("CouchDB", couchDbViewConfigBuilder);
+			CayenneViewConfigBuilder cayenneViewConfigBuilder) {
+		configuration.add("Cayenne", cayenneViewConfigBuilder);
 	}
 
 }

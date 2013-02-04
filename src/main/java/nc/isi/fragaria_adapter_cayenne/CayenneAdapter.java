@@ -52,7 +52,7 @@ import com.google.common.collect.Multimap;
  * 
  * @author bjonathas
  *
- * Allow user to manipulate data from relational database.
+ * This adapter is based on Cayenne interface and allows Session to manipulate data from relational database.
  */
 public class CayenneAdapter extends AbstractAdapter implements Adapter{
 	private final DataSourceProvider dataSourceProvider;
@@ -162,7 +162,6 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 		return buildQueryResponse(entity);
 	}
 
-	
 	@Override
 	public <T extends Entity> UniqueQueryResponse<T> executeUniqueQuery(
 			Query<T> query) {
@@ -224,7 +223,7 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 		Datasource ds = dataSourceProvider.provide(entityMetadata.getDsKey());
 		ObjectContext context;
 		try {
-			context = contextCache.get(((CayenneConnectionData)ds.getDsMetadata().getConnectionData()).getDatamapName());
+			context = contextCache.get(((CayenneConnectionData)ds.getDsMetadata().getConnectionData()).getConfFileName());
 		} catch (ExecutionException e) {
 			throw new RuntimeException(e);
 		}
