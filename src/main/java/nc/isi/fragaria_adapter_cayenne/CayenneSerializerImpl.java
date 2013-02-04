@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import nc.isi.fragaria_adapter_rewrite.entities.Entity;
 import nc.isi.fragaria_adapter_rewrite.entities.EntityBuilder;
-import nc.isi.fragaria_adapter_rewrite.entities.EntityMetadataFactory;
+import nc.isi.fragaria_adapter_rewrite.entities.EntityMetadata;
 import nc.isi.fragaria_adapter_rewrite.entities.views.View;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,14 +12,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 public class CayenneSerializerImpl implements CayenneSerializer{
-	private final EntityMetadataFactory entityMetadataFactory;
 	private final EntityBuilder entityBuilder;
 	private final ObjectMapper mapper;
 	
-	public CayenneSerializerImpl(EntityMetadataFactory entityMetadataFactory,
+	public CayenneSerializerImpl(
 			EntityBuilder entityBuilder) {
 		super();
-		this.entityMetadataFactory = entityMetadataFactory;
 		this.entityBuilder = entityBuilder;
 		this.mapper = new ObjectMapper();
 	}
@@ -59,7 +57,8 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 	public <E extends Entity> E deSerialize(EntityCayenneDataObject object,
 			Class<E> entityClass) {
 		ObjectNode node = mapper.createObjectNode();
-		for(String propertyName : entityMetadataFactory.create(entityClass).propertyNames())
+		EntityMetadata metadata = new EntityMetadata(entityClass);
+		for(String propertyName : metadata.propertyNames())
 			node.put(propertyName, mapper.valueToTree(object.readProperty(propertyName)));
 		return entityBuilder.build(node, entityClass);
 	}
@@ -82,7 +81,8 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 	public <E extends Entity> E deSerialize(EntityCayenneDataObject object,
 			Class<E> entityClass, Class<? extends View> view) {
 		ObjectNode node = mapper.createObjectNode();
-		for(String propertyName : entityMetadataFactory.create(entityClass).propertyNames(view))
+		EntityMetadata metadata = new EntityMetadata(entityClass);
+		for(String propertyName : metadata.propertyNames(view))
 			node.put(propertyName, mapper.valueToTree(object.readProperty(propertyName)));
 		return entityBuilder.build(node, entityClass);
 	}

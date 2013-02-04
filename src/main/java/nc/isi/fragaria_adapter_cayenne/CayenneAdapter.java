@@ -26,7 +26,6 @@ import nc.isi.fragaria_adapter_rewrite.dao.adapters.Adapter;
 import nc.isi.fragaria_adapter_rewrite.dao.adapters.ElasticSearchAdapter;
 import nc.isi.fragaria_adapter_rewrite.entities.Entity;
 import nc.isi.fragaria_adapter_rewrite.entities.EntityMetadata;
-import nc.isi.fragaria_adapter_rewrite.entities.EntityMetadataFactory;
 import nc.isi.fragaria_adapter_rewrite.entities.views.GenericQueryViews.All;
 import nc.isi.fragaria_adapter_rewrite.entities.views.ViewConfig;
 import nc.isi.fragaria_adapter_rewrite.enums.State;
@@ -48,16 +47,17 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
+
 /**
  * 
  * @author bjonathas
  *
  * This adapter is based on Cayenne interface and allows Session to manipulate data from relational database.
  */
+
 public class CayenneAdapter extends AbstractAdapter implements Adapter{
 	private final DataSourceProvider dataSourceProvider;
 	private final ElasticSearchAdapter elasticSearchAdapter;
-	private final EntityMetadataFactory entityMetadataFactory;
 	private final CayenneSerializer serializer;
 	private static final long MAX_INSTANCE_TIME = 60L;
 	private final LoadingCache<String, ObjectContext> contextCache = CacheBuilder
@@ -75,11 +75,9 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 	
 	public CayenneAdapter(DataSourceProvider dataSourceProvider,
 			ElasticSearchAdapter elasticSearchAdapter,
-			EntityMetadataFactory entityMetadataFactory,
 			CayenneSerializer serializer) {
 		this.dataSourceProvider = dataSourceProvider;
 		this.elasticSearchAdapter = elasticSearchAdapter;
-		this.entityMetadataFactory = entityMetadataFactory;
 		this.serializer = serializer;
 	}
 	public <T extends Entity> CollectionQueryResponse<T> executeQuery(
@@ -92,7 +90,7 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 		if (query instanceof ByViewQuery) {
 			ByViewQuery<T> bVQuery = (ByViewQuery<T>) query;
 			Class<T> resultType = (Class<T>)bVQuery.getResultType();
-			ObjectContext context = getContext(entityMetadataFactory.create(resultType));
+			ObjectContext context = getContext(new EntityMetadata(resultType));
 			CollectionQueryResponse<T> response = null;
 			if(bVQuery.getView()!=null){
 				response = selectFromView(bVQuery,
@@ -154,7 +152,7 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 			String id, Class<T> type) {
 		checkNotNull(id);
 		checkNotNull(type);
-		EntityMetadata entityMetadata = entityMetadataFactory.create(type);
+		EntityMetadata entityMetadata = new EntityMetadata(type);
 		ObjectId objectId = new ObjectId(type.getSimpleName(),"id",id);
 		ObjectIdQuery query = new ObjectIdQuery(objectId);
 		EntityCayenneDataObject cayenneDO = (EntityCayenneDataObject) Cayenne.objectForQuery(getContext(entityMetadata),query);
@@ -190,8 +188,7 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 		checkNotNull(entities);
 		List<Entity> filtered = cleanMultipleEntries(entities);
 		for (Entity entity : filtered) {
-			ObjectContext context = getContext(entity
-					.getMetadata());
+			ObjectContext context = getContext(entity.metadata());
 			register(context,entity);
 		}
 		for (String key : contextCache.asMap().keySet()) {

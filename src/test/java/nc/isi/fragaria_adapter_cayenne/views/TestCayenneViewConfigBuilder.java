@@ -6,7 +6,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 import nc.isi.fragaria_adapter_cayenne.model.CayenneQaRegistry;
-import nc.isi.fragaria_adapter_rewrite.resources.ResourceFinder;
+import nc.isi.fragaria_reflection.services.ResourceFinder;
 
 public class TestCayenneViewConfigBuilder  extends TestCase{
 	private final ResourceFinder resourceFinder = CayenneQaRegistry.INSTANCE

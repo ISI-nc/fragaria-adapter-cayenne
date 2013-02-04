@@ -22,6 +22,7 @@ public class TestCayenneAdapter  extends TestCase {
 		etablissement.setName("ATIR");
 		Directeur directeur = session.create(Directeur.class);
 		directeur.setName("Jean-Michel");
+		System.out.println(directeur.toJSON());
 		etablissement.setDirecteur(directeur);
 		session.post();
 		

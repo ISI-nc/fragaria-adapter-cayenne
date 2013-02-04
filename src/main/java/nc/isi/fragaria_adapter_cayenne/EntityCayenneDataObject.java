@@ -56,15 +56,15 @@ public class EntityCayenneDataObject extends CayenneDataObject implements DataOb
 	}
 
 	private Object readPropertyFromEntity(String propName) {
-		if(Entity.class.isAssignableFrom(entity.getMetadata().propertyType(propName))){
+		if(Entity.class.isAssignableFrom(entity.metadata().propertyType(propName))){
 			
-			Entity prop = (Entity) entity.getMetadata().read(entity, propName);
+			Entity prop = (Entity) entity.metadata().read(entity, propName);
 			if(prop!=null)
 				return prop.getId();
 			else
 				return null;
 		}else
-			return entity.getMetadata().read(entity, propName);
+			return entity.metadata().read(entity, propName);
 	}
 
 	private Object readPropertyFromDb(String propName) {
