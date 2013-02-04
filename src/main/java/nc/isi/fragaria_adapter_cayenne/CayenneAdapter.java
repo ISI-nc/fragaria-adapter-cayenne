@@ -45,14 +45,16 @@ import org.apache.cayenne.query.SelectQuery;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 /**
  * 
  * @author bjonathas
  *
- * This adapter is based on Cayenne interface and allows Session to manipulate data from relational database.
+ * This adapter is based on Cayenne interface and allows Session to manipulate 
+ * data from relational database. It will be used for all the data from 
+ * datasource where datatype = "Cayenne".
  */
 
 public class CayenneAdapter extends AbstractAdapter implements Adapter{
@@ -156,6 +158,8 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 		ObjectId objectId = new ObjectId(type.getSimpleName(),"id",id);
 		ObjectIdQuery query = new ObjectIdQuery(objectId);
 		EntityCayenneDataObject cayenneDO = (EntityCayenneDataObject) Cayenne.objectForQuery(getContext(entityMetadata),query);
+		if(cayenneDO==null)
+			return buildQueryResponse((T)null);
 		T entity = serializer.deSerialize(cayenneDO,type);
 		return buildQueryResponse(entity);
 	}
@@ -229,7 +233,7 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 
 	private List<Entity> cleanMultipleEntries(List<Entity> entities) {
 		List<Entity> filtered = new LinkedList<>();
-		Multimap<State, Entity> dispatch = LinkedListMultimap.create();
+		Multimap<State, Entity> dispatch = HashMultimap.create();
 		for (Entity entity : entities) {
 			State state = entity.getState();
 			if (!dispatch.containsValue(entity)) {
@@ -250,9 +254,6 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 		switch (state) {
 		case MODIFIED:
 			switch (oldState) {
-			case NEW:
-				dispatch.put(oldState, entity);
-				break;
 			case MODIFIED:
 				dispatch.put(oldState, entity);
 				break;
@@ -269,6 +270,16 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 				dispatch.remove(oldState, entity);
 				dispatch.put(state, entity);
 				break;
+			default:
+				commitError(entity, oldState, state);
+			}
+			break;
+		case NEW:
+			switch (oldState) {
+			case NEW:
+				dispatch.put(oldState, entity);
+				break;
+
 			default:
 				commitError(entity, oldState, state);
 			}
