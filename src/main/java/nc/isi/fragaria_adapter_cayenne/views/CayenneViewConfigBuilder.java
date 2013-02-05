@@ -59,7 +59,8 @@ public class CayenneViewConfigBuilder implements ViewConfigBuilder{
 	@Override
 	public ViewConfig buildDefault(Class<? extends Entity> entityClass,
 			Class<? extends QueryView> view) {
-		return null;
+		CayenneViewConfig config = new CayenneViewConfig(entityClass.getSimpleName().toLowerCase());
+		return config;
 	}
 
 }

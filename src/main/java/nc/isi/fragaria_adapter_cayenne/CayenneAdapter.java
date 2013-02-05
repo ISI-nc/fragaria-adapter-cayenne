@@ -91,13 +91,14 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 		}
 		if (query instanceof ByViewQuery) {
 			ByViewQuery<T> bVQuery = (ByViewQuery<T>) query;
+			checkNotNull(bVQuery.getView());
 			Class<T> resultType = (Class<T>)bVQuery.getResultType();
 			ObjectContext context = getContext(new EntityMetadata(resultType));
 			CollectionQueryResponse<T> response = null;
-			if(bVQuery.getView()!=null){
+			if(bVQuery.getView() != All.class){
 				response = selectFromView(bVQuery,
 						resultType, context);
-			}else if(bVQuery.getView() == null || bVQuery.getView() == All.class){
+			}else if(bVQuery.getView() == All.class){
 				response = selectFromTable(bVQuery,
 						resultType, context);
 			}
@@ -129,6 +130,7 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 		CollectionQueryResponse<T> response = new CollectionQueryResponse<>(serializer.deSerialize(result, resultType));
 		return response;
 	}
+	
 	private <T extends Entity> CollectionQueryResponse<T> selectFromView(
 			ByViewQuery<T> bVQuery, Class<T> resultType, ObjectContext context) {
 		Map<String, Object> filter = bVQuery.getFilter();
@@ -155,7 +157,7 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 		checkNotNull(id);
 		checkNotNull(type);
 		EntityMetadata entityMetadata = new EntityMetadata(type);
-		ObjectId objectId = new ObjectId(type.getSimpleName(),"id",id);
+		ObjectId objectId = new ObjectId(type.getSimpleName(),Entity.ID,id);
 		ObjectIdQuery query = new ObjectIdQuery(objectId);
 		EntityCayenneDataObject cayenneDO = (EntityCayenneDataObject) Cayenne.objectForQuery(getContext(entityMetadata),query);
 		if(cayenneDO==null)
@@ -322,7 +324,7 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 		try {
 			SQLTemplate checkIfExists = new SQLTemplate(entityMetadata.getEntityClass().getSimpleName(),sql);
 			checkIfExists.setParameters(Collections.singletonMap(
-					"tableName", entityMetadata.getEntityClass().getSimpleName().toLowerCase()));
+					"tableName", viewConfig.getName()));
 			context.performGenericQuery(checkIfExists);
 		} catch (Exception e) {
 			exists = false;

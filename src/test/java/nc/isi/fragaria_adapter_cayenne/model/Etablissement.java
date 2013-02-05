@@ -1,7 +1,9 @@
 package nc.isi.fragaria_adapter_cayenne.model;
 
+import nc.isi.fragaria_adapter_cayenne.views.abc;
 import nc.isi.fragaria_adapter_rewrite.annotations.BackReference;
 import nc.isi.fragaria_adapter_rewrite.annotations.DsKey;
+import nc.isi.fragaria_adapter_rewrite.annotations.InView;
 import nc.isi.fragaria_adapter_rewrite.entities.AbstractEntity;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -19,6 +21,7 @@ public class Etablissement extends AbstractEntity {
 		super();
 	}
 
+	@InView(abc.class)
 	public String getName() {
 		return readProperty(String.class, NAME);
 	}

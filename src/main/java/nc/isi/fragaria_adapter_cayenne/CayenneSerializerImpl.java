@@ -5,21 +5,21 @@ import java.util.Collection;
 import nc.isi.fragaria_adapter_rewrite.entities.Entity;
 import nc.isi.fragaria_adapter_rewrite.entities.EntityBuilder;
 import nc.isi.fragaria_adapter_rewrite.entities.EntityMetadata;
+import nc.isi.fragaria_adapter_rewrite.entities.FragariaObjectMapper;
 import nc.isi.fragaria_adapter_rewrite.entities.views.View;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 public class CayenneSerializerImpl implements CayenneSerializer{
 	private final EntityBuilder entityBuilder;
-	private final ObjectMapper mapper;
+	private final FragariaObjectMapper mapper;			
 	
 	public CayenneSerializerImpl(
 			EntityBuilder entityBuilder) {
 		super();
 		this.entityBuilder = entityBuilder;
-		this.mapper = new ObjectMapper();
+		this.mapper = FragariaObjectMapper.INSTANCE;
 	}
 	
 	@Override
@@ -56,10 +56,8 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 	@Override
 	public <E extends Entity> E deSerialize(EntityCayenneDataObject object,
 			Class<E> entityClass) {
-		ObjectNode node = mapper.createObjectNode();
 		EntityMetadata metadata = new EntityMetadata(entityClass);
-		for(String propertyName : metadata.propertyNames())
-			node.put(propertyName, mapper.valueToTree(object.readProperty(propertyName)));
+		ObjectNode node = createObjectNode(object,metadata.propertyNames(),metadata);
 		return entityBuilder.build(node, entityClass);
 	}
 
@@ -80,11 +78,29 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 	@Override
 	public <E extends Entity> E deSerialize(EntityCayenneDataObject object,
 			Class<E> entityClass, Class<? extends View> view) {
-		ObjectNode node = mapper.createObjectNode();
 		EntityMetadata metadata = new EntityMetadata(entityClass);
-		for(String propertyName : metadata.propertyNames(view))
-			node.put(propertyName, mapper.valueToTree(object.readProperty(propertyName)));
+		ObjectNode node = createObjectNode(object,metadata.propertyNames(view),metadata);
 		return entityBuilder.build(node, entityClass);
+	}
+	
+	private ObjectNode createObjectNode(
+			EntityCayenneDataObject object,
+			Collection<String> propertyNames,
+			EntityMetadata metadata){
+		ObjectNode node = mapper.get().createObjectNode();
+		for(String propertyName :propertyNames){
+			Boolean hasNotToBeWritten = metadata.isNotEmbededList(propertyName);
+			if(!hasNotToBeWritten){
+				if(propertyName.equals(Entity.ID)){
+					String id = object.getObjectId().getIdSnapshot().get(Entity.ID).toString();
+					node.put(metadata.getJsonPropertyName(propertyName), 
+							mapper.get().valueToTree(id));
+				}else
+					node.put(metadata.getJsonPropertyName(propertyName), 
+							mapper.get().valueToTree(object.readProperty(propertyName)));
+			}
+		}
+		return node;
 	}
 
 

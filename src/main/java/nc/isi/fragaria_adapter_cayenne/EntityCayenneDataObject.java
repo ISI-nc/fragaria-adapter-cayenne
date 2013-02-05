@@ -34,7 +34,6 @@ public class EntityCayenneDataObject extends CayenneDataObject implements DataOb
 	
 	public void updateFrom(Entity modifiedEntity){
 		checkNotNull(entity);
-		//checkArgument(entity.getId() == modifiedEntity.getId(), "", errorMessageArgs);
 		if(entity.getId() == modifiedEntity.getId()){
 			this.entity = modifiedEntity;
 			this.setPersistenceState(4);
@@ -84,12 +83,6 @@ public class EntityCayenneDataObject extends CayenneDataObject implements DataOb
 
 		    return object;
 	}
-	
-
-	
-	
-
-	
 
 	public Source getSource() {
 		return source;
