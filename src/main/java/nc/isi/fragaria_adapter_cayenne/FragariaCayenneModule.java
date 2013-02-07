@@ -39,5 +39,6 @@ public class FragariaCayenneModule {
 			CayenneViewConfigBuilder cayenneViewConfigBuilder) {
 		configuration.add("Cayenne", cayenneViewConfigBuilder);
 	}
+	
 
 }

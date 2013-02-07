@@ -3,7 +3,6 @@
 	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	 xsi:schemaLocation="http://cayenne.apache.org/schema/3.0/modelMap http://cayenne.apache.org/schema/3.0/modelMap.xsd"
 	 project-version="6">
-	<property name="defaultSuperclass" value="nc.isi.fragaria_adapter_cayenne.EntityCayenneDataObject"/>
 	<db-entity name="directeur" schema="public">
 		<db-attribute name="id" type="CHAR" isPrimaryKey="true" isMandatory="true" length="50"/>
 		<db-attribute name="name" type="CHAR" length="50"/>
@@ -13,10 +12,10 @@
 		<db-attribute name="iddirecteur" type="VARCHAR" length="50"/>
 		<db-attribute name="name" type="VARCHAR" length="50"/>
 	</db-entity>
-	<obj-entity name="Directeur" dbEntityName="directeur" superClassName="nc.isi.fragaria_adapter_cayenne.EntityCayenneDataObject">
+	<obj-entity name="Directeur" dbEntityName="directeur">
 		<obj-attribute name="name" type="java.lang.String" db-attribute-path="name"/>
 	</obj-entity>
-	<obj-entity name="Etablissement" dbEntityName="etablissement" superClassName="nc.isi.fragaria_adapter_cayenne.EntityCayenneDataObject">
+	<obj-entity name="Etablissement" dbEntityName="etablissement">
 		<obj-attribute name="directeur" type="char" db-attribute-path="iddirecteur"/>
 		<obj-attribute name="name" type="java.lang.String" db-attribute-path="name"/>
 	</obj-entity>

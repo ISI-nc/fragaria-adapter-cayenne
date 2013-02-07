@@ -13,6 +13,7 @@ public class Directeur extends AbstractEntity{
 	public static final String NAME = "name";
 	public static final String ETABLISSEMENTS = "etablissements";
 
+	
 	public Directeur(ObjectNode objectNode) {
 		super(objectNode);
 	}
@@ -40,9 +41,9 @@ public class Directeur extends AbstractEntity{
 		writeProperty(ETABLISSEMENTS, etablissement);
 	}
 	
-	public void setEtablissements(Collection<Etablissement> etablissements) {
-		writeProperty(ETABLISSEMENTS, etablissements);
-	}
+//	public void setEtablissements(Collection<Etablissement> etablissements) {
+//		writeProperty(ETABLISSEMENTS, etablissements);
+//	}
 
 	@Override
 	public String toString() {

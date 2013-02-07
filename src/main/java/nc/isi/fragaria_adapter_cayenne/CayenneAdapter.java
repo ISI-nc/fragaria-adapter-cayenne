@@ -33,6 +33,7 @@ import nc.isi.fragaria_adapter_rewrite.resources.DataSourceProvider;
 import nc.isi.fragaria_adapter_rewrite.resources.Datasource;
 
 import org.apache.cayenne.Cayenne;
+import org.apache.cayenne.CayenneDataObject;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.configuration.server.ServerRuntime;
@@ -126,7 +127,7 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 				e.andExp(ExpressionFactory.likeIgnoreCaseExp(key,filter.get(key)));
 		}
 		SelectQuery selectQuery = new SelectQuery(resultType.getSimpleName(),e);
-		Collection<EntityCayenneDataObject> result = (Collection<EntityCayenneDataObject>) context.performQuery(selectQuery);	
+		Collection<CayenneDataObject> result = (Collection<CayenneDataObject>) context.performQuery(selectQuery);	
 		CollectionQueryResponse<T> response = new CollectionQueryResponse<>(serializer.deSerialize(result, resultType));
 		return response;
 	}
@@ -147,7 +148,7 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 			selectQuery.setParameters(Collections.singletonMap(
 					key, filter.get(key)));
 		}
-		Collection<EntityCayenneDataObject> result = (Collection<EntityCayenneDataObject>) context.performQuery(selectQuery);	
+		Collection<CayenneDataObject> result = (Collection<CayenneDataObject>) context.performQuery(selectQuery);	
 		CollectionQueryResponse<T> response = new CollectionQueryResponse<>(serializer.deSerialize(result, resultType,bVQuery.getView()));
 		return response;
 	}
@@ -158,8 +159,8 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 		checkNotNull(type);
 		EntityMetadata entityMetadata = new EntityMetadata(type);
 		ObjectId objectId = new ObjectId(type.getSimpleName(),Entity.ID,id);
-		ObjectIdQuery query = new ObjectIdQuery(objectId);
-		EntityCayenneDataObject cayenneDO = (EntityCayenneDataObject) Cayenne.objectForQuery(getContext(entityMetadata),query);
+		ObjectIdQuery query = new ObjectIdQuery(objectId,false,ObjectIdQuery.CACHE);
+		CayenneDataObject cayenneDO = (CayenneDataObject) Cayenne.objectForQuery(getContext(entityMetadata),query);
 		if(cayenneDO==null)
 			return buildQueryResponse((T)null);
 		T entity = serializer.deSerialize(cayenneDO,type);
@@ -205,20 +206,33 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 			}
 		}
 		for (Entity entity : filtered) {
-			entity.setState(State.COMMITED);
+			if (entity.getState()!=State.DELETED)
+				entity.setState(State.COMMITED);
 		}
 	}
 	
 	private void register(ObjectContext context, Entity entity) {
-		EntityCayenneDataObject object = serializer.serialize(entity);
-		context.registerNewObject(object);
-		if(entity.getState()==State.NEW)
-			object.setPersistenceState(2);
-		else if (entity.getState()==State.MODIFIED){
-			object.setPersistenceState(4);
-		}else if(entity.getState()==State.DELETED){
-			object.setPersistenceState(6);
-		}
+		switch (entity.getState()) {
+		case NEW:
+			CayenneDataObject cayenneDOToCreate = serializer.serialize(entity);
+			context.registerNewObject(cayenneDOToCreate);
+			break;
+		case MODIFIED:
+			ObjectId idMod = new ObjectId(entity.getClass().getSimpleName(), Entity.ID, entity.getId());
+			ObjectIdQuery queryMod = new ObjectIdQuery(idMod, false, ObjectIdQuery.CACHE);
+			CayenneDataObject cayenneDOToMod = (CayenneDataObject) Cayenne.objectForQuery(context,queryMod);
+			serializer.fillProperties(cayenneDOToMod, entity);
+			break;
+		case DELETED:
+			ObjectId idDel = new ObjectId(entity.getClass().getSimpleName(), Entity.ID, entity.getId());
+			ObjectIdQuery queryDel = new ObjectIdQuery(idDel, false, ObjectIdQuery.CACHE);
+			CayenneDataObject cayenneDOToDel = (CayenneDataObject) Cayenne.objectForQuery(context,queryDel);
+			context.deleteObjects(cayenneDOToDel);
+			break;
+		default:
+			break;
+		}	
+
 	}
 
 	protected ObjectContext getContext(EntityMetadata entityMetadata) {
