@@ -101,8 +101,10 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 			EntityMetadata metadata){
 		ObjectNode node = mapper.createObjectNode();
 		for(String propertyName :propertyNames){
-			Boolean hasNotToBeWritten = metadata.isNotEmbededList(propertyName);
-			if(!hasNotToBeWritten){
+			Boolean hasToBeWritten = !metadata.isNotEmbededList(propertyName);
+			if(!hasToBeWritten){
+				continue;
+			}else{
 				if(propertyName.equals(Entity.ID)){
 					String id = object.getObjectId().getIdSnapshot().get(Entity.ID).toString();
 					node.put(metadata.getJsonPropertyName(propertyName), 
@@ -136,7 +138,9 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 		EntityMetadata metadata = entity.metadata();
 		for(String propertyName : metadata.propertyNames()){
 			Boolean hasToBeWritten = !metadata.isNotEmbededList(propertyName);
-			if(hasToBeWritten){
+			if(!hasToBeWritten){
+				continue;
+			}else{
 				if(propertyName.equals(Entity.ID)){
 					ObjectId id = new ObjectId(entity.getClass().getSimpleName(),Entity.ID,entity.getId());
 					cayenneDO.setObjectId(id);
