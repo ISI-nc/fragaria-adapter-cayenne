@@ -1,7 +1,6 @@
 package nc.isi.fragaria_adapter_cayenne.model;
 
 import nc.isi.fragaria_adapter_cayenne.views.abc;
-import nc.isi.fragaria_adapter_rewrite.annotations.BackReference;
 import nc.isi.fragaria_adapter_rewrite.annotations.DsKey;
 import nc.isi.fragaria_adapter_rewrite.annotations.InView;
 import nc.isi.fragaria_adapter_rewrite.entities.AbstractEntity;
@@ -30,7 +29,6 @@ public class Etablissement extends AbstractEntity {
 		writeProperty(NAME, name);
 	}
 	
-	@BackReference("etablissements")
 	public Directeur getDirecteur() {
 		return readProperty(Directeur.class, DIRECTEUR);
 	}
