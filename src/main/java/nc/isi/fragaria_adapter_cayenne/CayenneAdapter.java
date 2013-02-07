@@ -135,15 +135,13 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter{
 	private <T extends Entity> CollectionQueryResponse<T> selectFromView(
 			ByViewQuery<T> bVQuery, Class<T> resultType, ObjectContext context) {
 		Map<String, Object> filter = bVQuery.getFilter();
-		String sql = "select * from $view";
+		String sql = "select * from "+bVQuery.getView().getSimpleName().toUpperCase();
 		if(filter.size()>0)
 			sql+=" where ";
 		for(String key : filter.keySet()){
 			sql+=key+" #bindEqual($"+key+")";
 		}
 		SQLTemplate selectQuery = new SQLTemplate(resultType.getSimpleName(),sql);
-		selectQuery.setParameters(Collections.singletonMap(
-				"view", bVQuery.getView().getSimpleName()));
 		for(String key : filter.keySet()){
 			selectQuery.setParameters(Collections.singletonMap(
 					key, filter.get(key)));

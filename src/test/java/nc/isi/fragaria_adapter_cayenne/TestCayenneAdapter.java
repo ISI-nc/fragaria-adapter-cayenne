@@ -27,6 +27,7 @@ import org.apache.tapestry5.ioc.Registry;
 
 import com.beust.jcommander.internal.Lists;
 
+
 public class TestCayenneAdapter extends TestCase{
 	private static final Registry registry = CayenneQaRegistry.INSTANCE
 			.getRegistry();
@@ -46,18 +47,10 @@ public class TestCayenneAdapter extends TestCase{
 	}
 	
 	
-	public void testPostCreate(){
+	public void testCreate(){
 		init();
-//		Collection<Etablissement> collInit =  
-//				session.get(new ByViewQuery<>(Etablissement.class, viewToTest).where("name","ATIR").
-//						or("name", "ToTestPost").
-//						or("name", "ATIR3").
-//						or("name", "ATIR2").
-//						or("name", "ToTestPost").
-//						or("name", "ATIRSimple").
-//						or("name","TESTUPDATEMODIFIED"));
-//		Collection<Etablissement> collInit =  
-//				session.get(new ByViewQuery<>(Etablissement.class, viewToTest).where("name",nameForTesting));
+		Collection<Etablissement> collInit =  
+				session.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy("name",nameForTesting));
 		for (int i = 0; i <nbObjectsToCreate;i++){
 			Etablissement etablissement = session.create(Etablissement.class);
 			etablissement.setName(nameForTesting);
@@ -71,26 +64,11 @@ public class TestCayenneAdapter extends TestCase{
 				.getService(SessionManager.class);
 		Session session2 = sessionManager.create();
 		Collection<Etablissement> coll =  
-				session2.get(new ByViewQuery<>(Etablissement.class, viewToTest).where("name",nameForTesting));
-		//checkArgument(coll.size()==collInit.size()+nbObjectsToCreate);
+				session2.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy("name",nameForTesting));
+		checkArgument(coll.size()==collInit.size()+nbObjectsToCreate);
 	}
 	
-	public void testPostUpdate(){
-		init();
-		Collection<Etablissement> collInit =  
-				session.get(new ByViewQuery<>(Etablissement.class, viewToTest).where("name",nameForTesting));		
-		for(Etablissement etablissement : session.get(new ByViewQuery<>(Etablissement.class, viewToTest).where("name",nameForTesting)))
-			etablissement.setName(nameForTesting+modifPrefix);
-		session.post();
-		SessionManager sessionManager = registry
-				.getService(SessionManager.class);
-		Session session2 = sessionManager.create();
-		Collection<Etablissement> coll =  
-				session2.get(new ByViewQuery<>(Etablissement.class, viewToTest).where("name",nameForTesting+modifPrefix));
-		checkArgument(coll.size()==collInit.size());
-	}
-	
-	public void testDelete(){
+	public void testUpdate(){
 		init();
 		for (int i = 0; i <nbObjectsToCreate;i++){
 			Etablissement etablissement = session.create(Etablissement.class);
@@ -98,18 +76,51 @@ public class TestCayenneAdapter extends TestCase{
 			etablissementsCreated.add(etablissement);
 		}
 		session.post();
+		Collection<Etablissement> collInitForTesting =  
+				session.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy("name",nameForTesting));	
+		Collection<Etablissement> collInitForTestingModif =  
+				session.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy("name",nameForTesting+modifPrefix));
+		for(Etablissement etablissement : 
+			session.get(new ByViewQuery<>(Etablissement.class, viewToTest).
+					filterBy("name",nameForTesting))){
+			etablissement.setName(nameForTesting+modifPrefix);
+			if(etablissement.getDirecteur()!=null)
+				System.out.println(etablissement.getDirecteur().getId());
+		}
+			
+		session.post();
 		SessionManager sessionManager = registry
 				.getService(SessionManager.class);
 		Session session2 = sessionManager.create();
 		Collection<Etablissement> coll =  
-				session2.get(new ByViewQuery<>(Etablissement.class, viewToTest).where("name",nameForTesting));
+				session2.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy("name",nameForTesting+modifPrefix));
+		checkArgument(coll.size()==collInitForTesting.size()+collInitForTestingModif.size());
+	}
+	
+	public void testDelete(){
+		init();
+		List<Etablissement> etabDel = Lists.newArrayList();
+		
+		for (int i = 0; i <nbObjectsToCreate;i++){
+			Etablissement etablissement = session.create(Etablissement.class);
+			etablissement.setName(nameForTesting);
+			etablissementsCreated.add(etablissement);
+			etabDel.add(etablissement);
+		}
+		session.post();
+		SessionManager sessionManager = registry
+				.getService(SessionManager.class);
+		Session session2 = sessionManager.create();
+		Collection<Etablissement> coll =  
+				session2.get(new ByViewQuery<Etablissement>(Etablissement.class, viewToTest).filterBy("name",nameForTesting));
 		checkArgument(coll.size()>=nbObjectsToCreate);
 		session.delete(coll);
 		session.post();
 		Session session3 = sessionManager.create();
 		Collection<Etablissement> coll2 =  
-				session3.get(new ByViewQuery<>(Etablissement.class, viewToTest).where("name",nameForTesting));
+				session3.get(new ByViewQuery<Etablissement>(Etablissement.class, viewToTest).filterBy("name",nameForTesting));
 		checkArgument(coll2.size()==0);
+		etablissementsCreated.removeAll(etabDel);
 	}
 	
 	public void testGetById(){
@@ -126,9 +137,6 @@ public class TestCayenneAdapter extends TestCase{
 				getUnique(new IdQuery<>(Etablissement.class,id));
 		System.out.println(etabGet.getId());
 		checkArgument(etabGet.getId().equals(id));
-//		session.delete(etablissement);
-//		session.post();
-
 	}
 	
 	public void testGetByView(){
@@ -147,10 +155,10 @@ public class TestCayenneAdapter extends TestCase{
 	public void testGetByViewWithWhereClause(){
 		init();
 		Collection<Etablissement> coll =  
-				session.get(new ByViewQuery<>(Etablissement.class, viewToTest).where("name",nameForTesting));
+				session.get(new ByViewQuery<Etablissement>(Etablissement.class, viewToTest).filterBy("name",nameForTesting));
 		ServerRuntime cayenneRuntime = new ServerRuntime("cayenne-config.xml");
 		ObjectContext context = cayenneRuntime.getContext();
-		SQLTemplate query = new SQLTemplate("Etablissement","select * from $view where name = 'ATIR'");
+		SQLTemplate query = new SQLTemplate("Etablissement","select * from $view where name = '"+nameForTesting+"'");
 		query.setParameters(Collections.singletonMap(
 				"view", viewToTest.getSimpleName()));
 		GenericResponse response  =  (GenericResponse) context.performGenericQuery(query);
@@ -164,8 +172,17 @@ public class TestCayenneAdapter extends TestCase{
 		ServerRuntime cayenneRuntime = new ServerRuntime("cayenne-config.xml");
 		ObjectContext context = cayenneRuntime.getContext();
 		SelectQuery query = new SelectQuery("Etablissement");
-		Collection<CayenneDataObject> response =  (Collection<CayenneDataObject>) context.performQuery(query);
+		Collection<CayenneDataObject> response =  
+				(Collection<CayenneDataObject>) context.performQuery(query);
 		checkArgument(coll.size()==response.size());
+	}
+	
+	
+	protected void tearDown(){
+		init();
+		session.delete(etablissementsCreated);
+		session.delete(directeursCreated);
+		session.post();
 	}
 	
 }

@@ -101,11 +101,14 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 					node.put(metadata.getJsonPropertyName(propertyName), 
 							mapper.get().valueToTree(id));
 				}else if (Entity.class.isAssignableFrom(metadata.propertyType(propertyName))){
+					System.out.println(object.readProperty(propertyName));
+					CayenneDataObject prop = (CayenneDataObject) object.readProperty(propertyName);
+					ObjectNode propNode = null;
+					if(prop!=null)
+						propNode =  createPropertyNode(metadata,
+										(String) object.readProperty(propertyName));
 					node.put(metadata.getJsonPropertyName(propertyName), 
-							mapper.get().valueToTree(
-									createPropertyNode(
-											metadata,
-											(String) object.readProperty(propertyName))));
+							mapper.get().valueToTree(propNode));
 				}else
 					node.put(metadata.getJsonPropertyName(propertyName), 
 							mapper.get().valueToTree(object.readProperty(propertyName)));
@@ -114,7 +117,7 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 		return node;
 	}
 
-	private Object createPropertyNode(EntityMetadata metadata,String id) {
+	private ObjectNode createPropertyNode(EntityMetadata metadata,String id) {
 		ObjectNode node = mapper.get().createObjectNode();
 		node.put(metadata.getJsonPropertyName(Entity.ID), id);
 		return node;
