@@ -55,7 +55,7 @@ import com.google.common.collect.Multimap;
  *
  * This adapter is based on Cayenne interface and allows Session to manipulate 
  * data from relational database. It will be used for all the data from 
- * datasource where datatype = "Cayenne".
+ * datasource where datatype = "Cayenne". 
  */
 
 public class CayenneAdapter extends AbstractAdapter implements Adapter{

@@ -14,7 +14,14 @@ import nc.isi.fragaria_adapter_rewrite.entities.views.ViewConfig;
 import nc.isi.fragaria_adapter_rewrite.entities.views.ViewConfigBuilder;
 
 import com.google.common.base.Throwables;
-
+/**
+ * 
+ * @author bjonathas
+ *
+ *ViewConfigBuilder for Cayenne. It creates the CayenneViewConfig by reading 
+ *configuration files with .sql extension. These files contain a sql script 
+ *for the creation of the view in the database.
+ */
 public class CayenneViewConfigBuilder implements ViewConfigBuilder{
 	public static final String SQL = ".*\\.sql";
 

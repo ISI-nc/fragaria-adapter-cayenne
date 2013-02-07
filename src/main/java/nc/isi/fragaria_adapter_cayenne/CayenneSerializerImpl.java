@@ -13,7 +13,13 @@ import org.apache.cayenne.ObjectId;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
-
+/**
+ * 
+ * @author bjonathas
+ *
+ *Serializer for Cayenne. It serializes Entity into CayenneDataObject 
+ *and deserialize CayenneDataObject into Entity.
+ */
 public class CayenneSerializerImpl implements CayenneSerializer{
 	private final EntityBuilder entityBuilder;
 	private final FragariaObjectMapper mapper;			
