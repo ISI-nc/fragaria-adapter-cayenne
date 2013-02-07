@@ -11,6 +11,7 @@ import nc.isi.fragaria_adapter_rewrite.entities.views.View;
 import org.apache.cayenne.CayenneDataObject;
 import org.apache.cayenne.ObjectId;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 /**
@@ -22,13 +23,13 @@ import com.google.common.collect.Lists;
  */
 public class CayenneSerializerImpl implements CayenneSerializer{
 	private final EntityBuilder entityBuilder;
-	private final FragariaObjectMapper mapper;			
+	private final ObjectMapper mapper;			
 	
 	public CayenneSerializerImpl(
 			EntityBuilder entityBuilder) {
 		super();
 		this.entityBuilder = entityBuilder;
-		this.mapper = FragariaObjectMapper.INSTANCE;
+		this.mapper = FragariaObjectMapper.INSTANCE.get();
 	}
 	
 	@Override
@@ -98,14 +99,14 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 			CayenneDataObject object,
 			Collection<String> propertyNames,
 			EntityMetadata metadata){
-		ObjectNode node = mapper.get().createObjectNode();
+		ObjectNode node = mapper.createObjectNode();
 		for(String propertyName :propertyNames){
 			Boolean hasNotToBeWritten = metadata.isNotEmbededList(propertyName);
 			if(!hasNotToBeWritten){
 				if(propertyName.equals(Entity.ID)){
 					String id = object.getObjectId().getIdSnapshot().get(Entity.ID).toString();
 					node.put(metadata.getJsonPropertyName(propertyName), 
-							mapper.get().valueToTree(id));
+							mapper.valueToTree(id));
 				}else if (Entity.class.isAssignableFrom(metadata.propertyType(propertyName))){
 					System.out.println(object.readProperty(propertyName));
 					CayenneDataObject prop = (CayenneDataObject) object.readProperty(propertyName);
@@ -114,17 +115,17 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 						propNode =  createPropertyNode(metadata,
 										(String) object.readProperty(propertyName));
 					node.put(metadata.getJsonPropertyName(propertyName), 
-							mapper.get().valueToTree(propNode));
+							mapper.valueToTree(propNode));
 				}else
 					node.put(metadata.getJsonPropertyName(propertyName), 
-							mapper.get().valueToTree(object.readProperty(propertyName)));
+							mapper.valueToTree(object.readProperty(propertyName)));
 			}
 		}
 		return node;
 	}
 
 	private ObjectNode createPropertyNode(EntityMetadata metadata,String id) {
-		ObjectNode node = mapper.get().createObjectNode();
+		ObjectNode node = mapper.createObjectNode();
 		node.put(metadata.getJsonPropertyName(Entity.ID), id);
 		return node;
 	}
