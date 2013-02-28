@@ -51,11 +51,16 @@ import com.google.common.collect.Multimap;
 
 /**
  * 
- * @author bjonathas
+ * @author bjonathas <<<<<<< HEAD
  * 
  *         This adapter is based on Cayenne interface and allows Session to
  *         manipulate data from relational database. It will be used for all the
- *         data from datasource where datatype = "Cayenne".
+ *         data from datasource where datatype = "Cayenne". =======
+ * 
+ *         This adapter is based on Cayenne interface and allows Session to
+ *         manipulate data from relational database. It will be used for all the
+ *         data from datasource where datatype = "Cayenne". >>>>>>>
+ *         ce13fc2428f675751af31170414fa5e48c79dce1
  */
 
 public class CayenneAdapter extends AbstractAdapter implements Adapter {
@@ -139,7 +144,9 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 	private <T extends Entity> CollectionQueryResponse<T> selectFromView(
 			ByViewQuery<T> bVQuery, Class<T> resultType, ObjectContext context) {
 		Map<String, Object> filter = bVQuery.getFilter();
-		String sql = "select * from $view";
+
+		String sql = "select * from "
+				+ bVQuery.getView().getSimpleName().toUpperCase();
 		if (filter.size() > 0)
 			sql += " where ";
 		for (String key : filter.keySet()) {
@@ -147,8 +154,6 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 		}
 		SQLTemplate selectQuery = new SQLTemplate(resultType.getSimpleName(),
 				sql);
-		selectQuery.setParameters(Collections.singletonMap("view", bVQuery
-				.getView().getSimpleName()));
 		for (String key : filter.keySet()) {
 			selectQuery.setParameters(Collections.singletonMap(key,
 					filter.get(key)));
@@ -373,10 +378,14 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 					CayenneAdapter.class));
 		ObjectContext context = checkNotNull(getContext(entityMetadata));
 		CayenneViewConfig cayenneViewConfig = (CayenneViewConfig) viewConfig;
-		SQLTemplate createView = new SQLTemplate(entityMetadata
-				.getEntityClass().getSimpleName(),
-				cayenneViewConfig.getScript());
-		context.performGenericQuery(createView);
+		if (entityMetadata.getClass().getSimpleName().toLowerCase() != cayenneViewConfig
+				.getName()) {
+			checkNotNull(cayenneViewConfig.getScript());
+			SQLTemplate createView = new SQLTemplate(entityMetadata
+					.getEntityClass().getSimpleName(),
+					cayenneViewConfig.getScript());
+			context.performGenericQuery(createView);
+		}
 	}
 
 }

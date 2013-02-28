@@ -11,18 +11,25 @@ import nc.isi.fragaria_adapter_rewrite.entities.views.View;
 import org.apache.cayenne.CayenneDataObject;
 import org.apache.cayenne.ObjectId;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
-
+/**
+ * 
+ * @author bjonathas
+ *
+ *Serializer for Cayenne. It serializes Entity into CayenneDataObject 
+ *and deserialize CayenneDataObject into Entity.
+ */
 public class CayenneSerializerImpl implements CayenneSerializer{
 	private final EntityBuilder entityBuilder;
-	private final FragariaObjectMapper mapper;			
+	private final ObjectMapper mapper;			
 	
 	public CayenneSerializerImpl(
 			EntityBuilder entityBuilder) {
 		super();
 		this.entityBuilder = entityBuilder;
-		this.mapper = FragariaObjectMapper.INSTANCE;
+		this.mapper = FragariaObjectMapper.INSTANCE.get();
 	}
 	
 	@Override
@@ -92,30 +99,35 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 			CayenneDataObject object,
 			Collection<String> propertyNames,
 			EntityMetadata metadata){
-		ObjectNode node = mapper.get().createObjectNode();
+		ObjectNode node = mapper.createObjectNode();
 		for(String propertyName :propertyNames){
-			Boolean hasNotToBeWritten = metadata.isNotEmbededList(propertyName);
-			if(!hasNotToBeWritten){
-				if(propertyName.equals(Entity.ID)){
-					String id = object.getObjectId().getIdSnapshot().get(Entity.ID).toString();
-					node.put(metadata.getJsonPropertyName(propertyName), 
-							mapper.get().valueToTree(id));
-				}else if (Entity.class.isAssignableFrom(metadata.propertyType(propertyName))){
-					node.put(metadata.getJsonPropertyName(propertyName), 
-							mapper.get().valueToTree(
-									createPropertyNode(
-											metadata,
-											(String) object.readProperty(propertyName))));
-				}else
-					node.put(metadata.getJsonPropertyName(propertyName), 
-							mapper.get().valueToTree(object.readProperty(propertyName)));
-			}
+			Boolean hasToBeWritten = !metadata.isNotEmbededList(propertyName);
+			if(!hasToBeWritten)
+				continue;
+
+			if(propertyName.equals(Entity.ID)){
+				String id = object.getObjectId().getIdSnapshot().get(Entity.ID).toString();
+				node.put(metadata.getJsonPropertyName(propertyName), 
+						mapper.valueToTree(id));
+			}else if (Entity.class.isAssignableFrom(metadata.propertyType(propertyName))){
+				System.out.println(object.readProperty(propertyName));
+				CayenneDataObject prop = (CayenneDataObject) object.readProperty(propertyName);
+				ObjectNode propNode = null;
+				if(prop!=null)
+					propNode =  createPropertyNode(metadata,
+									(String) object.readProperty(propertyName));
+				node.put(metadata.getJsonPropertyName(propertyName), 
+						mapper.valueToTree(propNode));
+			}else
+				node.put(metadata.getJsonPropertyName(propertyName), 
+						mapper.valueToTree(object.readProperty(propertyName)));
+
 		}
 		return node;
 	}
 
-	private Object createPropertyNode(EntityMetadata metadata,String id) {
-		ObjectNode node = mapper.get().createObjectNode();
+	private ObjectNode createPropertyNode(EntityMetadata metadata,String id) {
+		ObjectNode node = mapper.createObjectNode();
 		node.put(metadata.getJsonPropertyName(Entity.ID), id);
 		return node;
 	}
@@ -126,19 +138,21 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 		EntityMetadata metadata = entity.metadata();
 		for(String propertyName : metadata.propertyNames()){
 			Boolean hasToBeWritten = !metadata.isNotEmbededList(propertyName);
-			if(hasToBeWritten){
-				if(propertyName.equals(Entity.ID)){
-					ObjectId id = new ObjectId(entity.getClass().getSimpleName(),Entity.ID,entity.getId());
-					cayenneDO.setObjectId(id);
-				}else if (Entity.class.isAssignableFrom(metadata.propertyType(propertyName))){
-					Entity prop = (Entity) entity.metadata().read(entity,propertyName);
-					String propId = null;
-					if(prop!=null)
-						propId = prop.getId();
-					cayenneDO.writeProperty(propertyName, propId);
-				}else
-					cayenneDO.writeProperty(propertyName, metadata.read(entity, propertyName));
-			}
+			if(!hasToBeWritten)
+				continue;
+
+			if(propertyName.equals(Entity.ID)){
+				ObjectId id = new ObjectId(entity.getClass().getSimpleName(),Entity.ID,entity.getId());
+				cayenneDO.setObjectId(id);
+			}else if (Entity.class.isAssignableFrom(metadata.propertyType(propertyName))){
+				Entity prop = (Entity) entity.metadata().read(entity,propertyName);
+				String propId = null;
+				if(prop!=null)
+					propId = prop.getId();
+				cayenneDO.writeProperty(propertyName, propId);
+			}else
+				cayenneDO.writeProperty(propertyName, metadata.read(entity, propertyName));
+
 		}
 		return cayenneDO;
 	}

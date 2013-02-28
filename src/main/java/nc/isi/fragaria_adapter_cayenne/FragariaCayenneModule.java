@@ -9,7 +9,12 @@ import org.apache.tapestry5.ioc.Configuration;
 import org.apache.tapestry5.ioc.MappedConfiguration;
 import org.apache.tapestry5.ioc.ServiceBinder;
 import org.apache.tapestry5.ioc.annotations.SubModule;
-
+/**
+ * 
+ * @author bjonathas
+ *
+ *
+ */
 @SubModule(FragariaDomainModule.class)
 public class FragariaCayenneModule {
 	
