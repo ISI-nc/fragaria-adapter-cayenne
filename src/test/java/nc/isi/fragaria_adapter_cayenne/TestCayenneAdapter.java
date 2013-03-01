@@ -185,6 +185,7 @@ public class TestCayenneAdapter extends TestCase {
 				All.class));
 		ServerRuntime cayenneRuntime = new ServerRuntime("cayenne-config.xml");
 		ObjectContext context = cayenneRuntime.getContext();
+		System.out.println(coll);
 		SelectQuery query = new SelectQuery("Amas");
 		Collection<CayenneDataObject> response = (Collection<CayenneDataObject>) context
 				.performQuery(query);

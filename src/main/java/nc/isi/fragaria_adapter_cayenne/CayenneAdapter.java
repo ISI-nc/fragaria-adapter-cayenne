@@ -39,6 +39,7 @@ import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
+import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.query.ObjectIdQuery;
 import org.apache.cayenne.query.SQLTemplate;
 import org.apache.cayenne.query.SelectQuery;
@@ -51,16 +52,11 @@ import com.google.common.collect.Multimap;
 
 /**
  * 
- * @author bjonathas <<<<<<< HEAD
+ * @author bjonathas
  * 
  *         This adapter is based on Cayenne interface and allows Session to
  *         manipulate data from relational database. It will be used for all the
- *         data from datasource where datatype = "Cayenne". =======
- * 
- *         This adapter is based on Cayenne interface and allows Session to
- *         manipulate data from relational database. It will be used for all the
- *         data from datasource where datatype = "Cayenne". >>>>>>>
- *         ce13fc2428f675751af31170414fa5e48c79dce1
+ *         data from datasource where datatype = "Cayenne".
  */
 
 public class CayenneAdapter extends AbstractAdapter implements Adapter {
@@ -170,7 +166,11 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 		checkNotNull(id);
 		checkNotNull(type);
 		EntityMetadata entityMetadata = new EntityMetadata(type);
-		ObjectId objectId = new ObjectId(type.getSimpleName(), Entity.ID, id);
+		ObjectContext context = getContext(entityMetadata);
+		ObjEntity objEntity = context.getEntityResolver().getObjEntity(
+				type.getSimpleName());
+		ObjectId objectId = new ObjectId(type.getSimpleName(), objEntity
+				.getAttributeMap().get(Entity.ID).getDbAttributeName(), id);
 		ObjectIdQuery query = new ObjectIdQuery(objectId, false,
 				ObjectIdQuery.CACHE);
 		CayenneDataObject cayenneDO = (CayenneDataObject) Cayenne
