@@ -1,6 +1,7 @@
 package nc.isi.fragaria_adapter_cayenne;
 
 import java.util.Collection;
+import java.util.Map;
 
 import nc.isi.fragaria_adapter_rewrite.entities.Entity;
 import nc.isi.fragaria_adapter_rewrite.entities.EntityBuilder;
@@ -14,6 +15,7 @@ import org.apache.cayenne.ObjectId;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 /**
  * 
  * @author bjonathas
@@ -23,7 +25,8 @@ import com.google.common.collect.Lists;
  */
 public class CayenneSerializerImpl implements CayenneSerializer{
 	private final EntityBuilder entityBuilder;
-	private final ObjectMapper mapper;			
+	private final ObjectMapper mapper;	
+	private final Map<String,String> idSnapshotToUpperCase = Maps.newHashMap();
 	
 	public CayenneSerializerImpl(
 			EntityBuilder entityBuilder) {
@@ -106,7 +109,12 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 				continue;
 
 			if(propertyName.equals(Entity.ID)){
-				String id = object.getObjectId().getIdSnapshot().get(Entity.ID).toString();
+				idSnapshotToUpperCase.clear();
+				for(String key : object.getObjectId().getIdSnapshot().keySet()){
+					idSnapshotToUpperCase.put(key.toUpperCase(), 
+												object.getObjectId().getIdSnapshot().get(key).toString());
+				}
+				String id = idSnapshotToUpperCase.get(Entity.ID.toUpperCase());
 				node.put(metadata.getJsonPropertyName(propertyName), 
 						mapper.valueToTree(id));
 			}else if (Entity.class.isAssignableFrom(metadata.propertyType(propertyName))){

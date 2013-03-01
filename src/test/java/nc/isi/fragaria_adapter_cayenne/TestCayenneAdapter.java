@@ -34,6 +34,7 @@ public class TestCayenneAdapter extends TestCase{
 	private Session session;
 	private final static String idToTest = "f62cea7c-fdc6-4140-b1a5-997e3f31e9ee";
 	private final Class<abc> viewToTest = abc.class;
+	private final static String field = "name";
 	private final static String nameForTesting = "ToTestPost";
 	private final static String modifPrefix = "Modified";
 	private final static int nbObjectsToCreate = 10;
@@ -50,7 +51,7 @@ public class TestCayenneAdapter extends TestCase{
 	public void testCreate(){
 		init();
 		Collection<Etablissement> collInit =  
-				session.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy("name",nameForTesting));
+				session.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy(field,nameForTesting));
 		for (int i = 0; i <nbObjectsToCreate;i++){
 			Etablissement etablissement = session.create(Etablissement.class);
 			etablissement.setName(nameForTesting);
@@ -64,7 +65,7 @@ public class TestCayenneAdapter extends TestCase{
 				.getService(SessionManager.class);
 		Session session2 = sessionManager.create();
 		Collection<Etablissement> coll =  
-				session2.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy("name",nameForTesting));
+				session2.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy(field,nameForTesting));
 		checkArgument(coll.size()==collInit.size()+nbObjectsToCreate);
 	}
 	
@@ -77,12 +78,12 @@ public class TestCayenneAdapter extends TestCase{
 		}
 		session.post();
 		Collection<Etablissement> collInitForTesting =  
-				session.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy("name",nameForTesting));	
+				session.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy(field,nameForTesting));	
 		Collection<Etablissement> collInitForTestingModif =  
-				session.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy("name",nameForTesting+modifPrefix));
+				session.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy(field,nameForTesting+modifPrefix));
 		for(Etablissement etablissement : 
 			session.get(new ByViewQuery<>(Etablissement.class, viewToTest).
-					filterBy("name",nameForTesting))){
+					filterBy(field,nameForTesting))){
 			etablissement.setName(nameForTesting+modifPrefix);
 			if(etablissement.getDirecteur()!=null)
 				System.out.println(etablissement.getDirecteur().getId());
@@ -93,7 +94,7 @@ public class TestCayenneAdapter extends TestCase{
 				.getService(SessionManager.class);
 		Session session2 = sessionManager.create();
 		Collection<Etablissement> coll =  
-				session2.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy("name",nameForTesting+modifPrefix));
+				session2.get(new ByViewQuery<>(Etablissement.class, viewToTest).filterBy(field,nameForTesting+modifPrefix));
 		checkArgument(coll.size()==collInitForTesting.size()+collInitForTestingModif.size());
 	}
 	
@@ -112,13 +113,13 @@ public class TestCayenneAdapter extends TestCase{
 				.getService(SessionManager.class);
 		Session session2 = sessionManager.create();
 		Collection<Etablissement> coll =  
-				session2.get(new ByViewQuery<Etablissement>(Etablissement.class, viewToTest).filterBy("name",nameForTesting));
+				session2.get(new ByViewQuery<Etablissement>(Etablissement.class, viewToTest).filterBy(field,nameForTesting));
 		checkArgument(coll.size()>=nbObjectsToCreate);
 		session.delete(coll);
 		session.post();
 		Session session3 = sessionManager.create();
 		Collection<Etablissement> coll2 =  
-				session3.get(new ByViewQuery<Etablissement>(Etablissement.class, viewToTest).filterBy("name",nameForTesting));
+				session3.get(new ByViewQuery<Etablissement>(Etablissement.class, viewToTest).filterBy(field,nameForTesting));
 		checkArgument(coll2.size()==0);
 		etablissementsCreated.removeAll(etabDel);
 	}
@@ -147,7 +148,7 @@ public class TestCayenneAdapter extends TestCase{
 		ObjectContext context = cayenneRuntime.getContext();
 		SQLTemplate query = new SQLTemplate("Etablissement","select * from $view");
 		query.setParameters(Collections.singletonMap(
-				"view", viewToTest.getSimpleName()));
+				"view", "Etablissement"));
 		GenericResponse response  =  (GenericResponse) context.performGenericQuery(query);
 		checkArgument(coll.size()==response.firstList().size());
 	}
@@ -155,10 +156,10 @@ public class TestCayenneAdapter extends TestCase{
 	public void testGetByViewWithWhereClause(){
 		init();
 		Collection<Etablissement> coll =  
-				session.get(new ByViewQuery<Etablissement>(Etablissement.class, viewToTest).filterBy("name",nameForTesting));
+				session.get(new ByViewQuery<Etablissement>(Etablissement.class, viewToTest).filterBy(field,nameForTesting));
 		ServerRuntime cayenneRuntime = new ServerRuntime("cayenne-config.xml");
 		ObjectContext context = cayenneRuntime.getContext();
-		SQLTemplate query = new SQLTemplate("Etablissement","select * from $view where name = '"+nameForTesting+"'");
+		SQLTemplate query = new SQLTemplate("Etablissement","select * from $view where " +field+" = '"+nameForTesting+"'");
 		query.setParameters(Collections.singletonMap(
 				"view", viewToTest.getSimpleName()));
 		GenericResponse response  =  (GenericResponse) context.performGenericQuery(query);
