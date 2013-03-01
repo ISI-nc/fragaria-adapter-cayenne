@@ -14,27 +14,26 @@ import org.apache.cayenne.ObjectId;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
+
 /**
  * 
  * @author bjonathas
- *
- *Serializer for Cayenne. It serializes Entity into CayenneDataObject 
- *and deserialize CayenneDataObject into Entity.
+ * 
+ *         Serializer for Cayenne. It serializes Entity into CayenneDataObject
+ *         and deserialize CayenneDataObject into Entity.
  */
-public class CayenneSerializerImpl implements CayenneSerializer{
+public class CayenneSerializerImpl implements CayenneSerializer {
 	private final EntityBuilder entityBuilder;
-	private final ObjectMapper mapper;			
-	
-	public CayenneSerializerImpl(
-			EntityBuilder entityBuilder) {
+	private final ObjectMapper mapper;
+
+	public CayenneSerializerImpl(EntityBuilder entityBuilder) {
 		super();
 		this.entityBuilder = entityBuilder;
 		this.mapper = FragariaObjectMapper.INSTANCE.get();
 	}
-	
+
 	@Override
-	public Collection<CayenneDataObject> serialize(
-			Collection<Entity> objects) {
+	public Collection<CayenneDataObject> serialize(Collection<Entity> objects) {
 		if (objects == null) {
 			return null;
 		}
@@ -47,9 +46,9 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 
 	@Override
 	public CayenneDataObject serialize(Entity entity) {
-		CayenneDataObject cayenneDO =  new CayenneDataObject();
+		CayenneDataObject cayenneDO = new CayenneDataObject();
 		return fillProperties(cayenneDO, entity);
-		
+
 	}
 
 	@Override
@@ -69,7 +68,8 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 	public <E extends Entity> E deSerialize(CayenneDataObject object,
 			Class<E> entityClass) {
 		EntityMetadata metadata = new EntityMetadata(entityClass);
-		ObjectNode node = createObjectNode(object,metadata.propertyNames(),metadata);
+		ObjectNode node = createObjectNode(object, metadata.propertyNames(),
+				metadata);
 		return entityBuilder.build(node, entityClass);
 	}
 
@@ -82,7 +82,7 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 		}
 		Collection<E> collection = Lists.newArrayList();
 		for (CayenneDataObject object : objects) {
-			collection.add(deSerialize(object, entityClass,view));
+			collection.add(deSerialize(object, entityClass, view));
 		}
 		return collection;
 	}
@@ -91,72 +91,77 @@ public class CayenneSerializerImpl implements CayenneSerializer{
 	public <E extends Entity> E deSerialize(CayenneDataObject object,
 			Class<E> entityClass, Class<? extends View> view) {
 		EntityMetadata metadata = new EntityMetadata(entityClass);
-		ObjectNode node = createObjectNode(object,metadata.propertyNames(view),metadata);
+		ObjectNode node = createObjectNode(object,
+				metadata.propertyNames(view), metadata);
 		return entityBuilder.build(node, entityClass);
 	}
-	
-	private ObjectNode createObjectNode(
-			CayenneDataObject object,
-			Collection<String> propertyNames,
-			EntityMetadata metadata){
+
+	private ObjectNode createObjectNode(CayenneDataObject object,
+			Collection<String> propertyNames, EntityMetadata metadata) {
 		ObjectNode node = mapper.createObjectNode();
-		for(String propertyName :propertyNames){
+		for (String propertyName : propertyNames) {
 			Boolean hasToBeWritten = !metadata.isNotEmbededList(propertyName);
-			if(!hasToBeWritten)
+			if (!hasToBeWritten)
 				continue;
 
-			if(propertyName.equals(Entity.ID)){
-				String id = object.getObjectId().getIdSnapshot().get(Entity.ID).toString();
-				node.put(metadata.getJsonPropertyName(propertyName), 
+			if (propertyName.equals(Entity.ID)) {
+				System.out.println(object.getObjectId().getIdSnapshot());
+				String id = object.getObjectId().getIdSnapshot().get(Entity.ID)
+						.toString();
+				node.put(metadata.getJsonPropertyName(propertyName),
 						mapper.valueToTree(id));
-			}else if (Entity.class.isAssignableFrom(metadata.propertyType(propertyName))){
+			} else if (Entity.class.isAssignableFrom(metadata
+					.propertyType(propertyName))) {
 				System.out.println(object.readProperty(propertyName));
-				CayenneDataObject prop = (CayenneDataObject) object.readProperty(propertyName);
+				CayenneDataObject prop = (CayenneDataObject) object
+						.readProperty(propertyName);
 				ObjectNode propNode = null;
-				if(prop!=null)
-					propNode =  createPropertyNode(metadata,
-									(String) object.readProperty(propertyName));
-				node.put(metadata.getJsonPropertyName(propertyName), 
+				if (prop != null)
+					propNode = createPropertyNode(metadata,
+							(String) object.readProperty(propertyName));
+				node.put(metadata.getJsonPropertyName(propertyName),
 						mapper.valueToTree(propNode));
-			}else
-				node.put(metadata.getJsonPropertyName(propertyName), 
+			} else
+				node.put(metadata.getJsonPropertyName(propertyName),
 						mapper.valueToTree(object.readProperty(propertyName)));
 
 		}
 		return node;
 	}
 
-	private ObjectNode createPropertyNode(EntityMetadata metadata,String id) {
+	private ObjectNode createPropertyNode(EntityMetadata metadata, String id) {
 		ObjectNode node = mapper.createObjectNode();
 		node.put(metadata.getJsonPropertyName(Entity.ID), id);
 		return node;
 	}
 
 	@Override
-	public CayenneDataObject fillProperties(
-			CayenneDataObject cayenneDO, Entity entity) {
+	public CayenneDataObject fillProperties(CayenneDataObject cayenneDO,
+			Entity entity) {
 		EntityMetadata metadata = entity.metadata();
-		for(String propertyName : metadata.propertyNames()){
+		for (String propertyName : metadata.propertyNames()) {
 			Boolean hasToBeWritten = !metadata.isNotEmbededList(propertyName);
-			if(!hasToBeWritten)
+			if (!hasToBeWritten)
 				continue;
 
-			if(propertyName.equals(Entity.ID)){
-				ObjectId id = new ObjectId(entity.getClass().getSimpleName(),Entity.ID,entity.getId());
+			if (propertyName.equals(Entity.ID)) {
+				ObjectId id = new ObjectId(entity.getClass().getSimpleName(),
+						Entity.ID, entity.getId());
 				cayenneDO.setObjectId(id);
-			}else if (Entity.class.isAssignableFrom(metadata.propertyType(propertyName))){
-				Entity prop = (Entity) entity.metadata().read(entity,propertyName);
+			} else if (Entity.class.isAssignableFrom(metadata
+					.propertyType(propertyName))) {
+				Entity prop = (Entity) entity.metadata().read(entity,
+						propertyName);
 				String propId = null;
-				if(prop!=null)
+				if (prop != null)
 					propId = prop.getId();
 				cayenneDO.writeProperty(propertyName, propId);
-			}else
-				cayenneDO.writeProperty(propertyName, metadata.read(entity, propertyName));
+			} else
+				cayenneDO.writeProperty(propertyName,
+						metadata.read(entity, propertyName));
 
 		}
 		return cayenneDO;
 	}
-
-
 
 }

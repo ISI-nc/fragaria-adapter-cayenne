@@ -378,8 +378,8 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 					CayenneAdapter.class));
 		ObjectContext context = checkNotNull(getContext(entityMetadata));
 		CayenneViewConfig cayenneViewConfig = (CayenneViewConfig) viewConfig;
-		if (entityMetadata.getClass().getSimpleName().toLowerCase() != cayenneViewConfig
-				.getName()) {
+		if (!entityMetadata.getEntityClass().getSimpleName().toLowerCase()
+				.equals(cayenneViewConfig.getName())) {
 			checkNotNull(cayenneViewConfig.getScript());
 			SQLTemplate createView = new SQLTemplate(entityMetadata
 					.getEntityClass().getSimpleName(),

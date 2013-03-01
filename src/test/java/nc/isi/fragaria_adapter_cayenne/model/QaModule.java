@@ -22,13 +22,17 @@ public class QaModule {
 	public void contributeViewInitializer(Configuration<String> configuration) {
 		configuration.add(PACKAGE_NAME[0]);
 	}
-	
+
 	public void contributeDataSourceProvider(
 			MappedConfiguration<String, Datasource> configuration) {
 		configuration.add("loc", new DatasourceImpl("loc",
-				new DataSourceMetadata("Cayenne", new CayenneConnectionData("cayenne-config.xml") {
+				new DataSourceMetadata("Cayenne", new CayenneConnectionData(
+						"cayenne-config.xml") {
+				}, true)));
+		configuration.add("rer-histo", new DatasourceImpl("rer-histo",
+				new DataSourceMetadata("Cayenne", new CayenneConnectionData(
+						"cayenne-rer-histo.xml") {
 				}, true)));
 	}
-
 
 }
