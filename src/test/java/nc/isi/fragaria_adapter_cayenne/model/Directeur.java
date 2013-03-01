@@ -1,8 +1,5 @@
 package nc.isi.fragaria_adapter_cayenne.model;
 
-import java.util.Collection;
-
-import nc.isi.fragaria_adapter_rewrite.annotations.BackReference;
 import nc.isi.fragaria_adapter_rewrite.annotations.DsKey;
 import nc.isi.fragaria_adapter_rewrite.entities.AbstractEntity;
 
@@ -30,16 +27,16 @@ public class Directeur extends AbstractEntity{
 		writeProperty(NAME, name);
 	}
 	
-	
-	
-	@BackReference("directeur")
-	public Collection<Etablissement> getEtablissements() {
-		return readCollection(Etablissement.class, ETABLISSEMENTS);
-	}
-
-	public void setEtablissements(Etablissement...etablissement) {
-		writeProperty(ETABLISSEMENTS, etablissement);
-	}
+//	
+//	
+//	@BackReference("directeur")
+//	public Collection<Etablissement> getEtablissements() {
+//		return readCollection(Etablissement.class, ETABLISSEMENTS);
+//	}
+//
+//	public void setEtablissements(Etablissement...etablissement) {
+//		writeProperty(ETABLISSEMENTS, etablissement);
+//	}
 	
 //	public void setEtablissements(Collection<Etablissement> etablissements) {
 //		writeProperty(ETABLISSEMENTS, etablissements);
