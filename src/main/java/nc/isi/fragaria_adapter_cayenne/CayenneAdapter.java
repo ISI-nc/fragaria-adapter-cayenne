@@ -61,6 +61,12 @@ import com.google.common.collect.Multimap;
  */
 
 public class CayenneAdapter extends AbstractAdapter implements Adapter {
+	private static final String BIND_EQUAL_DIRECTIVE = "#bindEqual";
+	private static final String WHERE = "WHERE";
+	private static final String FROM = "FROM";
+	private static final String RESULT_DIRECTIVE = "#result";
+	private static final String SELECT = "SELECT";
+	private static final String CHECK_IF_TABLE_EXISTS = "SELECT TRUE FROM $tableName";
 	private final DataSourceProvider dataSourceProvider;
 	private final ElasticSearchAdapter elasticSearchAdapter;
 	private final CayenneSerializer serializer;
@@ -153,48 +159,9 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 		Map<String, Object> filter = bVQuery.getFilter();
 		ObjEntity objEntity = context.getEntityResolver().getObjEntity(
 				resultType.getSimpleName());		
-		
 		EntityMetadata metadata = new EntityMetadata(resultType);
-		String sql = "SELECT";
-		int i = 1;
-		for (String prop : metadata.propertyNames(bVQuery.getView())){
-			String dbAttributeName = objEntity.getAttributeMap()
-					.get(prop)
-					.getDbAttributeName();
-			String dbAttributeType = objEntity.getAttributeMap().
-													get(prop).getJavaClass().getName();
-			sql+=" #result"
-					+"('"
-					+dbAttributeName
-					+"' '"
-					+dbAttributeType
-					+"')";
-			if(i < metadata.propertyNames(bVQuery.getView()).size())
-				sql+=",";
-			
-			i++;
-		}
-		
-		sql +=" FROM" 
-				+" "
-				+bVQuery.getView().getSimpleName().toUpperCase();
-		
-		if (filter.size() > 0){
-			sql += " WHERE";
-			for (String key : filter.keySet()) {
-				if(objEntity.getAttributeMap().get(key)==null)
-					continue;
-				String dbAttributeName = objEntity.getAttributeMap()
-						.get(key)
-						.getDbAttributeName();
-				sql += " "
-						+dbAttributeName 
-						+" #bindEqual($" 
-						+dbAttributeName 
-						+")";
-			}
-		}
-		SQLTemplate selectQuery = new SQLTemplate(resultType.getSimpleName(),sql);
+		SQLTemplate selectQuery = createSQLTemplate(bVQuery, resultType,
+				filter, objEntity, metadata);
 		for (String key : filter.keySet()) {
 			if(objEntity.getAttributeMap().get(key)==null)
 				continue;
@@ -213,6 +180,56 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 						,bVQuery.getView()
 						,getContext(new EntityMetadata(resultType))));
 		return response;
+	}
+
+	private <T extends Entity> SQLTemplate createSQLTemplate(
+			ByViewQuery<T> bVQuery, Class<T> resultType,
+			Map<String, Object> filter, ObjEntity objEntity,
+			EntityMetadata metadata) {
+		String sql = SELECT;
+		int i = 1;
+		for (String prop : metadata.propertyNames(bVQuery.getView())){
+			String dbAttributeName = objEntity.getAttributeMap()
+					.get(prop)
+					.getDbAttributeName();
+			String dbAttributeType = objEntity.getAttributeMap().
+													get(prop).getJavaClass().getName();
+			sql+=" "
+					+RESULT_DIRECTIVE
+					+"('"
+					+dbAttributeName
+					+"' '"
+					+dbAttributeType
+					+"')";
+			if(i < metadata.propertyNames(bVQuery.getView()).size())
+				sql+=",";
+			
+			i++;
+		}
+		
+		sql +=" "+FROM 
+				+" "
+				+bVQuery.getView().getSimpleName().toUpperCase();
+		
+		if (filter.size() > 0){
+			sql += " "+WHERE;
+			for (String key : filter.keySet()) {
+				if(objEntity.getAttributeMap().get(key)==null)
+					continue;
+				String dbAttributeName = objEntity.getAttributeMap()
+						.get(key)
+						.getDbAttributeName();
+				sql += " "
+						+dbAttributeName 
+						+" "
+						+BIND_EQUAL_DIRECTIVE
+						+"($" 
+						+dbAttributeName 
+						+")";
+			}
+		}
+		SQLTemplate selectQuery = new SQLTemplate(resultType.getSimpleName(),sql);
+		return selectQuery;
 	}
 
 	public <T extends Entity> UniqueQueryResponse<T> executeUniqueQuery(
@@ -417,7 +434,7 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 	public Boolean exist(ViewConfig viewConfig, EntityMetadata entityMetadata) {
 		ObjectContext context = getContext(entityMetadata);
 		Boolean exists = true;
-		String sql = "select true from $tableName";
+		String sql = CHECK_IF_TABLE_EXISTS;
 		try {
 			SQLTemplate checkIfExists = new SQLTemplate(entityMetadata
 					.getEntityClass().getSimpleName(), sql);
