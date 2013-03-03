@@ -4,14 +4,14 @@
 
 	<node name="datanode"
 		 factory="org.apache.cayenne.configuration.server.XMLPoolingDataSourceFactory"
-		 schema-update-strategy="org.apache.cayenne.access.dbsync.SkipSchemaUpdateStrategy"
+		 schema-update-strategy="org.apache.cayenne.access.dbsync.CreateIfNoSchemaStrategy"
 		>
 		<map-ref name="datamap"/>
 		<data-source>
-			<driver value="org.postgresql.Driver"/>
-			<url value="jdbc:postgresql://192.168.51.40:5432/testdev"/>
-			<connectionPool min="1" max="1"/>
-			<login userName="dev" password="softage"/>
+			<driver value="org.apache.derby.jdbc.EmbeddedDriver"/>
+			<url value="jdbc:derby:memory:testdb;create=true"/>
+			<connectionPool min="1" max="5"/>
+			<login/>
 		</data-source>
 	</node>
 </domain>

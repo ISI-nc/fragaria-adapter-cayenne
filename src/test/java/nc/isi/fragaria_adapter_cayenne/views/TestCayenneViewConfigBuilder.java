@@ -15,12 +15,12 @@ public class TestCayenneViewConfigBuilder  extends TestCase{
 	public void testBuildFromJsFile() {
 		CayenneViewConfigBuilder builder = new CayenneViewConfigBuilder();
 		List<File> files = new ArrayList<>(
-				resourceFinder.getResourcesMatching("test.sql"));
-		CayenneViewConfig conf = (CayenneViewConfig) builder.build("test",
+				resourceFinder.getResourcesMatching("etablissement-abc.sql"));
+		CayenneViewConfig conf = (CayenneViewConfig) builder.build("abc",
 				files.get(0));
 		
 		System.out.println(conf.getScript());
-		assertTrue("CREATE OR REPLACE VIEW abc AS  SELECT etablissement.id   FROM etablissement;ALTER TABLE abc  OWNER TO dev;"
+		assertTrue("CREATE VIEW ABC AS SELECT ETABLISSEMENT.id,ETABLISSEMENT.name FROM ETABLISSEMENT"
 				.equals(conf.getScript()));
 	}
 

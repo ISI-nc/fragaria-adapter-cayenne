@@ -43,10 +43,11 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.oracle</groupId>
-			<artifactId>ojdbc14</artifactId>
-			<version>10.2.0.3.0</version>
-		</dependency>  
+			<groupId>org.apache.derby</groupId>
+			<artifactId>derby</artifactId>
+			<version>10.9.1.0</version>
+			<scope>test</scope>
+		</dependency>         
 	</dependencies>
 	<build>
 		<finalName>fragaria-adapter-cayenne</finalName>
