@@ -35,6 +35,7 @@ public class TestCayenneAdapter extends TestCase {
 	private final Class<abc> viewToTest = abc.class;
 	private final String field = "name";
 	private final String nameForTesting = "ToTestPost";
+	private final String nameForTestingWhereClause = "ToTestWhere";
 	private final String nameForTestingDelete = "ToTestDelete";
 	private final String modifPrefix = "Modified";
 	private final static int nbObjectsToCreate = 2;
@@ -62,7 +63,7 @@ public class TestCayenneAdapter extends TestCase {
 				.filterBy(field, nameForTesting));
 		System.out.println(coll.size());
 		System.out.println(collInit.size() + nbObjectsToCreate);
-		checkArgument(coll.size() == collInit.size() + nbObjectsToCreate);
+		assertTrue(coll.size() == collInit.size() + nbObjectsToCreate);
 	}
 
 	public void testUpdate() {
@@ -90,7 +91,7 @@ public class TestCayenneAdapter extends TestCase {
 		Collection<Etablissement> coll = session.get(new ByViewQuery<>(
 				Etablissement.class, viewToTest).filterBy(field, nameForTesting
 				+ modifPrefix));
-		checkArgument(coll.size() == collInitForTesting.size()
+		assertTrue(coll.size() == collInitForTesting.size()
 				+ collInitForTestingModif.size());
 	}
 
@@ -106,15 +107,15 @@ public class TestCayenneAdapter extends TestCase {
 		session.post();
 		Collection<Etablissement> coll = session
 				.get(new ByViewQuery<Etablissement>(Etablissement.class,
-						viewToTest).filterBy(field, nameForTestingDelete));
-		checkArgument(coll.size() >= nbObjectsToCreate);
+						All.class).filterBy(field, nameForTestingDelete));
+		assertTrue(coll.size() >= nbObjectsToCreate);
 		session.delete(coll);
 		session.post();
 		Collection<Etablissement> coll2 = 
 				session.get(new ByViewQuery<Etablissement>(
 						Etablissement.class
-						,viewToTest).filterBy(field, nameForTestingDelete));
-		checkArgument(coll2.size() == 0);
+						,All.class).filterBy(field, nameForTestingDelete));
+		assertTrue(coll2.size() == 0);
 	}
 
 	public void testGetById() {
@@ -125,7 +126,7 @@ public class TestCayenneAdapter extends TestCase {
 		session.post();
 		Etablissement etabGet = (Etablissement) session
 				.getUnique(new IdQuery<>(Etablissement.class, id));
-		checkArgument(etabGet.getId().equals(id));
+		assertTrue(etabGet.getId().equals(id));
 	}
 
 	public void testGetByView() {
@@ -147,25 +148,29 @@ public class TestCayenneAdapter extends TestCase {
 		query.setParameters(Collections.singletonMap("view", "etablissement"));
 		GenericResponse response = (GenericResponse) context
 				.performGenericQuery(query);
-		checkArgument(coll.size() == response.firstList().size());
+		assertTrue(coll.size() == response.firstList().size());
 	}
 
 	public void testGetByViewWithWhereClause() {
 		init();
 
+		for (int i = 0; i < nbObjectsToCreate; i++) {
+			Etablissement etablissement = session.create(Etablissement.class);
+			etablissement.setName(nameForTestingWhereClause);
+		}
+
+		for (int i = 0; i < nbObjectsToCreate; i++) {
+			Etablissement etablissement = session.create(Etablissement.class);
+			etablissement.setName(nameForTesting);
+		}
+		session.post();
 		Collection<Etablissement> coll = session
 				.get(new ByViewQuery<Etablissement>(Etablissement.class,
-						viewToTest).filterBy(field, nameForTesting));
-		ServerRuntime cayenneRuntime = new ServerRuntime(cayenneconf);
-		ObjectContext context = cayenneRuntime.getContext();
-		SQLTemplate query = new SQLTemplate("Etablissement",
-				"select * from $view where " + field + " = '" + nameForTesting
-						+ "'");
-		query.setParameters(Collections.singletonMap("view",
-				viewToTest.getSimpleName()));
-		GenericResponse response = (GenericResponse) context
-				.performGenericQuery(query);
-		checkArgument(coll.size() == response.firstList().size());
+						viewToTest).filterBy(field, nameForTestingWhereClause));
+		assertTrue(nbObjectsToCreate == coll.size());
+		for(Etablissement et : coll){
+			assertTrue(et.getName().equals(nameForTestingWhereClause));
+		}
 	}
 
 	public void testGetByViewAll() {
@@ -178,7 +183,7 @@ public class TestCayenneAdapter extends TestCase {
 		SelectQuery query = new SelectQuery("Etablissement");
 		Collection<CayenneDataObject> response = (Collection<CayenneDataObject>) context
 				.performQuery(query);
-		checkArgument(coll.size() == response.size());
+		assertTrue(coll.size() == response.size());
 	}
 
 }
