@@ -29,7 +29,8 @@ import org.apache.tapestry5.ioc.RegistryBuilder;
 import com.google.common.collect.Lists;
 
 public class TestCayenneAdapter extends TestCase {
-	private static final Registry registry = RegistryBuilder.buildAndStartupRegistry(QaModule.class);
+	private static final Registry registry = RegistryBuilder
+			.buildAndStartupRegistry(QaModule.class);
 	private Session session;
 	private final String cayenneconf = "cayenne-datamap.xml";
 	private final Class<abc> viewToTest = abc.class;
@@ -107,14 +108,15 @@ public class TestCayenneAdapter extends TestCase {
 		Collection<Etablissement> coll = session
 				.get(new ByViewQuery<Etablissement>(Etablissement.class,
 						viewToTest).filterBy(field, nameForTestingDelete));
-		checkArgument(coll.size() >= nbObjectsToCreate);
+		assertTrue(coll.size() == nbObjectsToCreate);
+		System.out.println(coll);
 		session.delete(coll);
 		session.post();
-		Collection<Etablissement> coll2 = 
-				session.get(new ByViewQuery<Etablissement>(
-						Etablissement.class
-						,viewToTest).filterBy(field, nameForTestingDelete));
-		checkArgument(coll2.size() == 0);
+		Collection<Etablissement> coll2 = session
+				.get(new ByViewQuery<Etablissement>(Etablissement.class,
+						viewToTest).filterBy(field, nameForTestingDelete));
+		System.out.println(coll2);
+		assertTrue(coll2.size() == 0);
 	}
 
 	public void testGetById() {
@@ -170,8 +172,8 @@ public class TestCayenneAdapter extends TestCase {
 
 	public void testGetByViewAll() {
 		init();
-		Collection<Etablissement> coll = session.get(new ByViewQuery<>(Etablissement.class,
-				All.class));
+		Collection<Etablissement> coll = session.get(new ByViewQuery<>(
+				Etablissement.class, All.class));
 		ServerRuntime cayenneRuntime = new ServerRuntime(cayenneconf);
 		ObjectContext context = cayenneRuntime.getContext();
 		System.out.println(coll);
