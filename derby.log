@@ -1,9 +1,0 @@
-Mon Mar 04 14:04:10 NCT 2013:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.9.1.0 - (1344872): instance a816c00e-013d-335b-3ed6-00000487f858 
-on database directory memory:/home/brounchy/workspace/git/fragaria-adapter-cayenne/testdb  with class loader sun.misc.Launcher$AppClassLoader@32c3601b 
-Loaded from file:/home/brounchy/.m2/repository/org/apache/derby/derby/10.9.1.0/derby-10.9.1.0.jar
-java.vendor=Oracle Corporation
-java.runtime.version=1.7.0_15-b20
-user.dir=/home/brounchy/workspace/git/fragaria-adapter-cayenne
-derby.system.home=null
-Database Class Loader started - derby.database.classpath=''
