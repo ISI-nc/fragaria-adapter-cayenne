@@ -1,7 +1,5 @@
 package nc.isi.fragaria_adapter_cayenne;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +27,8 @@ import org.apache.tapestry5.ioc.RegistryBuilder;
 import com.google.common.collect.Lists;
 
 public class TestCayenneAdapter extends TestCase {
-	private static final Registry registry = RegistryBuilder.buildAndStartupRegistry(QaModule.class);
+	private static final Registry registry = RegistryBuilder
+			.buildAndStartupRegistry(QaModule.class);
 	private Session session;
 	private final String cayenneconf = "cayenne-datamap.xml";
 	private final Class<abc> viewToTest = abc.class;
@@ -111,10 +110,9 @@ public class TestCayenneAdapter extends TestCase {
 		assertTrue(coll.size() >= nbObjectsToCreate);
 		session.delete(coll);
 		session.post();
-		Collection<Etablissement> coll2 = 
-				session.get(new ByViewQuery<Etablissement>(
-						Etablissement.class
-						,All.class).filterBy(field, nameForTestingDelete));
+		Collection<Etablissement> coll2 = session
+				.get(new ByViewQuery<Etablissement>(Etablissement.class,
+						All.class).filterBy(field, nameForTestingDelete));
 		assertTrue(coll2.size() == 0);
 	}
 
@@ -168,15 +166,15 @@ public class TestCayenneAdapter extends TestCase {
 				.get(new ByViewQuery<Etablissement>(Etablissement.class,
 						viewToTest).filterBy(field, nameForTestingWhereClause));
 		assertTrue(nbObjectsToCreate == coll.size());
-		for(Etablissement et : coll){
+		for (Etablissement et : coll) {
 			assertTrue(et.getName().equals(nameForTestingWhereClause));
 		}
 	}
 
 	public void testGetByViewAll() {
 		init();
-		Collection<Etablissement> coll = session.get(new ByViewQuery<>(Etablissement.class,
-				All.class));
+		Collection<Etablissement> coll = session.get(new ByViewQuery<>(
+				Etablissement.class, All.class));
 		ServerRuntime cayenneRuntime = new ServerRuntime(cayenneconf);
 		ObjectContext context = cayenneRuntime.getContext();
 		System.out.println(coll);

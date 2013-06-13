@@ -131,13 +131,13 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 				resultType.getSimpleName());
 		Map<String, Object> filter = bVQuery.getFilter();
 		for (String key : filter.keySet()) {
-			if(objEntity.getAttributeMap().get(key)==null)
+			if (objEntity.getAttributeMap().get(key) == null)
 				continue;
-			String dbAttributeName = objEntity.getAttributeMap()
-					.get(key)
+			String dbAttributeName = objEntity.getAttributeMap().get(key)
 					.getDbAttributeName();
 			if (e == null) {
-				e = ExpressionFactory.likeIgnoreCaseExp(dbAttributeName, filter.get(key));
+				e = ExpressionFactory.likeIgnoreCaseExp(dbAttributeName,
+						filter.get(key));
 			} else {
 				e.andExp(ExpressionFactory.likeIgnoreCaseExp(dbAttributeName,
 						filter.get(key)));
@@ -147,10 +147,8 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 		Collection<CayenneDataObject> result = (Collection<CayenneDataObject>) context
 				.performQuery(selectQuery);
 		CollectionQueryResponse<T> response = new CollectionQueryResponse<>(
-				serializer.deSerialize(
-						result
-						,resultType
-						,getContext(new EntityMetadata(resultType))));
+				serializer.deSerialize(result, resultType,
+						getContext(new EntityMetadata(resultType))));
 		return response;
 	}
 
@@ -158,27 +156,24 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 			ByViewQuery<T> bVQuery, Class<T> resultType, ObjectContext context) {
 		Map<String, Object> filter = bVQuery.getFilter();
 		ObjEntity objEntity = context.getEntityResolver().getObjEntity(
-				resultType.getSimpleName());		
+				resultType.getSimpleName());
 		EntityMetadata metadata = new EntityMetadata(resultType);
 		SQLTemplate selectQuery = createSQLTemplate(bVQuery, resultType,
 				filter, objEntity, metadata);
 		for (String key : filter.keySet()) {
-			if(objEntity.getAttributeMap().get(key)==null)
+			if (objEntity.getAttributeMap().get(key) == null)
 				continue;
-			String dbAttributeName = objEntity.getAttributeMap()
-					.get(key)
+			String dbAttributeName = objEntity.getAttributeMap().get(key)
 					.getDbAttributeName();
 			selectQuery.setParameters(Collections.singletonMap(dbAttributeName,
 					filter.get(key)));
 		}
 		selectQuery.setFetchingDataRows(true);
-		List<DataRow> result = (List<DataRow>)context.performQuery(selectQuery);
+		List<DataRow> result = (List<DataRow>) context
+				.performQuery(selectQuery);
 		CollectionQueryResponse<T> response = new CollectionQueryResponse<>(
-				serializer.deSerialize(
-						result
-						,resultType
-						,bVQuery.getView()
-						,getContext(new EntityMetadata(resultType))));
+				serializer.deSerialize(result, resultType, bVQuery.getView(),
+						getContext(new EntityMetadata(resultType))));
 		return response;
 	}
 
@@ -188,47 +183,35 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 			EntityMetadata metadata) {
 		String sql = SELECT;
 		int i = 1;
-		for (String prop : metadata.propertyNames(bVQuery.getView())){
-			String dbAttributeName = objEntity.getAttributeMap()
-					.get(prop)
+		for (String prop : metadata.propertyNames(bVQuery.getView())) {
+			String dbAttributeName = objEntity.getAttributeMap().get(prop)
 					.getDbAttributeName();
-			String dbAttributeType = objEntity.getAttributeMap().
-													get(prop).getJavaClass().getName();
-			sql+=" "
-					+RESULT_DIRECTIVE
-					+"('"
-					+dbAttributeName
-					+"' '"
-					+dbAttributeType
-					+"')";
-			if(i < metadata.propertyNames(bVQuery.getView()).size())
-				sql+=",";
-			
+			String dbAttributeType = objEntity.getAttributeMap().get(prop)
+					.getJavaClass().getName();
+			sql += " " + RESULT_DIRECTIVE + "('" + dbAttributeName + "' '"
+					+ dbAttributeType + "')";
+			if (i < metadata.propertyNames(bVQuery.getView()).size())
+				sql += ",";
+
 			i++;
 		}
-		
-		sql +=" "+FROM 
-				+" "
-				+bVQuery.getView().getSimpleName().toUpperCase();
-		
-		if (filter.size() > 0){
-			sql += " "+WHERE;
+
+		sql += " " + FROM + " "
+				+ bVQuery.getView().getSimpleName().toUpperCase();
+
+		if (filter.size() > 0) {
+			sql += " " + WHERE;
 			for (String key : filter.keySet()) {
-				if(objEntity.getAttributeMap().get(key)==null)
+				if (objEntity.getAttributeMap().get(key) == null)
 					continue;
-				String dbAttributeName = objEntity.getAttributeMap()
-						.get(key)
+				String dbAttributeName = objEntity.getAttributeMap().get(key)
 						.getDbAttributeName();
-				sql += " "
-						+dbAttributeName 
-						+" "
-						+BIND_EQUAL_DIRECTIVE
-						+"($" 
-						+dbAttributeName 
-						+")";
+				sql += " " + dbAttributeName + " " + BIND_EQUAL_DIRECTIVE
+						+ "($" + dbAttributeName + ")";
 			}
 		}
-		SQLTemplate selectQuery = new SQLTemplate(resultType.getSimpleName(),sql);
+		SQLTemplate selectQuery = new SQLTemplate(resultType.getSimpleName(),
+				sql);
 		return selectQuery;
 	}
 
@@ -248,10 +231,8 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 				.objectForQuery(getContext(entityMetadata), query);
 		if (cayenneDO == null)
 			return buildQueryResponse((T) null);
-		T entity = serializer.deSerialize(
-				cayenneDO
-				,type
-				,getContext(new EntityMetadata(type)));
+		T entity = serializer.deSerialize(cayenneDO, type,
+				getContext(new EntityMetadata(type)));
 		return buildQueryResponse(entity);
 	}
 
@@ -302,12 +283,12 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 	private void register(ObjectContext context, Entity entity) {
 		ObjEntity objEntity = context.getEntityResolver().getObjEntity(
 				entity.getClass().getSimpleName());
-		String idAttributeName = objEntity.getAttributeMap()
-				.get(Entity.ID)
+		String idAttributeName = objEntity.getAttributeMap().get(Entity.ID)
 				.getDbAttributeName();
 		switch (entity.getState()) {
 		case NEW:
-			CayenneDataObject cayenneDOToCreate = serializer.serialize(entity,getContext(entity.metadata()));
+			CayenneDataObject cayenneDOToCreate = serializer.serialize(entity,
+					getContext(entity.metadata()));
 			context.registerNewObject(cayenneDOToCreate);
 			break;
 		case MODIFIED:
@@ -317,7 +298,8 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 					ObjectIdQuery.CACHE);
 			CayenneDataObject cayenneDOToMod = (CayenneDataObject) Cayenne
 					.objectForQuery(context, queryMod);
-			serializer.fillProperties(cayenneDOToMod, entity,getContext(entity.metadata()));
+			serializer.fillProperties(cayenneDOToMod, entity,
+					getContext(entity.metadata()));
 			break;
 		case DELETED:
 			ObjectId idDel = new ObjectId(entity.getClass().getSimpleName(),
@@ -326,7 +308,9 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 					ObjectIdQuery.CACHE);
 			CayenneDataObject cayenneDOToDel = (CayenneDataObject) Cayenne
 					.objectForQuery(context, queryDel);
-			context.deleteObjects(cayenneDOToDel);
+			if (cayenneDOToDel == null) {
+				context.deleteObjects(cayenneDOToDel);
+			}
 			break;
 		default:
 			break;
