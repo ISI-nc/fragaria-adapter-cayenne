@@ -302,13 +302,14 @@ public class CayenneAdapter extends AbstractAdapter implements Adapter {
 					getContext(entity.metadata()));
 			break;
 		case DELETED:
+			
 			ObjectId idDel = new ObjectId(entity.getClass().getSimpleName(),
 					idAttributeName, entity.getId());
 			ObjectIdQuery queryDel = new ObjectIdQuery(idDel, false,
 					ObjectIdQuery.CACHE);
 			CayenneDataObject cayenneDOToDel = (CayenneDataObject) Cayenne
 					.objectForQuery(context, queryDel);
-			if (cayenneDOToDel == null) {
+			if (cayenneDOToDel != null) {
 				context.deleteObjects(cayenneDOToDel);
 			}
 			break;

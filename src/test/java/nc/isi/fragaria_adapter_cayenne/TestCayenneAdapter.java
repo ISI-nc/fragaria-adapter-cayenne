@@ -107,12 +107,17 @@ public class TestCayenneAdapter extends TestCase {
 		Collection<Etablissement> coll = session
 				.get(new ByViewQuery<Etablissement>(Etablissement.class,
 						All.class).filterBy(field, nameForTestingDelete));
+		System.out.println("**************************coll1");
+		System.out.println(coll);
 		assertTrue(coll.size() >= nbObjectsToCreate);
 		session.delete(coll);
 		session.post();
 		Collection<Etablissement> coll2 = session
 				.get(new ByViewQuery<Etablissement>(Etablissement.class,
 						All.class).filterBy(field, nameForTestingDelete));
+		System.out.println("**************************coll2");
+		System.out.println(coll2);
+		System.out.println(coll2.size());
 		assertTrue(coll2.size() == 0);
 	}
 
